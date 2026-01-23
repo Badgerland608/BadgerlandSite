@@ -5,7 +5,7 @@ import Hero from './Hero';
 import HowItWorks from './HowItWorks';
 import Rates from './Rates';
 import ScheduleModal from './ScheduleModal';
-import BookinForm from './components/BookingForm'
+import BookingForm from './components/BookingForm'
 
 
 function App() {
