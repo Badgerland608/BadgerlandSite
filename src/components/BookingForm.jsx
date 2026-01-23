@@ -81,4 +81,4 @@ export default function BookingForm() {
       {message && <p>{message}</p>}
     </form>
   )
-}
+]
