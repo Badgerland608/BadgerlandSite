@@ -16,9 +16,9 @@ function App() {
       <Header setShowModal={setShowModal} />
       <Hero />
       <HowItWorks />
+      <BookingForm />
       <Rates />
       <Hero />
-      <BookingForm />
       <div className="bg-slate-900">
         <h2>Badgerland Laundry</h2>
       </div>
