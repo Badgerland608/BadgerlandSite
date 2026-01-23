@@ -50,10 +50,11 @@ export default function ScheduleModal({ setShowModal }) {
       status: 'pending'
     });
 
-    if (error) {
-      alert('Something went wrong. Try again.');
-      return;
-    }
+if (error) {
+  console.error("SUPABASE INSERT ERROR:", error);
+  alert("Something went wrong. Check the console.");
+  return;
+}
 
     alert('Pickup scheduled! You will receive a confirmation email or text.');
     setShowModal(false);
