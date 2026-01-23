@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useState } from '../lib/supaseClient'
+import { useState } from '../lib/supabaseClient'
 
 export default function BookingForm() {
   const [name, setName] = useState('')
