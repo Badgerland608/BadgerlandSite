@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
+import { supabase } from '../lib/supabaseClient';
 
 export default function ScheduleModal({ setShowModal }) {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ export default function ScheduleModal({ setShowModal }) {
     email: '',
     service: '',
     detergent: '',
+    notificationPreference: '',
   });
 
   const [selectedDate, setSelectedDate] = useState();
@@ -17,8 +19,8 @@ export default function ScheduleModal({ setShowModal }) {
   const [formComplete, setFormComplete] = useState(false);
 
   const timeSlots = [
-    '5:30 AM - 7:30 AM','8:00 AM - 10:00 AM','10:30 AM - 12:30 PM', '1:00 PM - 3:00 PM', 
-    '3:30 PM - 5:30 PM', '6:00 PM - 8:00 PM',
+    '5:30 AM - 7:30 AM','8:00 AM - 10:00 AM','10:30 AM - 12:30 PM',
+    '1:00 PM - 3:00 PM','3:30 PM - 5:30 PM','6:00 PM - 8:00 PM',
   ];
 
   const handleChange = (e) => {
@@ -30,9 +32,30 @@ export default function ScheduleModal({ setShowModal }) {
     setFormComplete(isComplete);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Pickup scheduled for ${selectedDate?.toLocaleDateString() || 'unspecified date'} at ${selectedTime || 'unspecified time'}!`);
+
+    const { error } = await supabase.from('orders').insert({
+      full_name: formData.fullName,
+      address: formData.address,
+      phone: formData.phone,
+      email: formData.email,
+      service: formData.service,
+      detergent: formData.detergent,
+      dryer_sheets: document.getElementById('dryerSheets').checked,
+      instructions: document.querySelector('textarea').value,
+      pickup_date: selectedDate?.toISOString().split('T')[0],
+      pickup_time: selectedTime,
+      notification_preference: formData.notificationPreference,
+      status: 'pending'
+    });
+
+    if (error) {
+      alert('Something went wrong. Try again.');
+      return;
+    }
+
+    alert('Pickup scheduled! You will receive a confirmation email or text.');
     setShowModal(false);
   };
 
@@ -44,12 +67,12 @@ export default function ScheduleModal({ setShowModal }) {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-3 text-sm text-purple-900">
-          <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required />
-          <input type="text" name="address" placeholder="Pickup Address" value={formData.address} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required />
-          <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required />
-          <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required />
+          <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
+          <input type="text" name="address" placeholder="Pickup Address" value={formData.address} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
+          <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
+          <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
 
-          <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+          <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Service</option>
             <option value="residential">Residential Wash & Fold</option>
             <option value="commercial">Commercial Laundry</option>
@@ -57,7 +80,7 @@ export default function ScheduleModal({ setShowModal }) {
             <option value="dry-cleaning">Dry Cleaning</option>
           </select>
 
-          <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+          <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Detergent</option>
             <option value="gain">Gain</option>
             <option value="arm-hammer">Arm & Hammer</option>
@@ -69,25 +92,42 @@ export default function ScheduleModal({ setShowModal }) {
             <label htmlFor="dryerSheets" className="text-sm text-purple-700">Include Dryer Sheets</label>
           </div>
 
-          <textarea placeholder="Special Instructions" className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" rows={3} />
+          <textarea placeholder="Special Instructions" className="w-full p-2 border border-purple-300 rounded" rows={3} />
+
+          {/* Notification Preference */}
+          <label className="block text-sm font-medium text-purple-700 mb-2">
+            How would you like to receive updates?
+          </label>
+          <select
+            name="notificationPreference"
+            value={formData.notificationPreference}
+            onChange={handleChange}
+            className="w-full p-2 border border-purple-300 rounded"
+            required
+          >
+            <option value="">Choose one</option>
+            <option value="email">Email</option>
+            <option value="sms">Text Message</option>
+            <option value="both">Both</option>
+          </select>
 
           {formComplete && (
-            <div className="mt-2">
-              <label className="block text-sm font-medium text-purple-700 mb-2">Select a Pickup Date</label>
+            <>
+              <label className="block text-sm font-medium text-purple-700 mt-4">Select a Pickup Date</label>
               <DayPicker mode="single" selected={selectedDate} onSelect={setSelectedDate} />
 
               {selectedDate && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-purple-700 mb-2">Select a Time Slot</label>
-                  <select value={selectedTime} onChange={(e) => setSelectedTime(e.target.value)} className="w-full p-2 border border-purple-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                <>
+                  <label className="block text-sm font-medium text-purple-700 mt-4">Select a Time Slot</label>
+                  <select value={selectedTime} onChange={(e) => setSelectedTime(e.target.value)} className="w-full p-2 border border-purple-300 rounded" required>
                     <option value="">Choose a time</option>
                     {timeSlots.map((slot) => (
                       <option key={slot} value={slot}>{slot}</option>
                     ))}
                   </select>
-                </div>
+                </>
               )}
-            </div>
+            </>
           )}
 
           <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded font-semibold hover:bg-purple-700 transition">
