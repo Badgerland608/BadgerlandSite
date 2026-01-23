@@ -5,6 +5,7 @@ import Hero from './Hero';
 import HowItWorks from './HowItWorks';
 import Rates from './Rates';
 import ScheduleModal from './ScheduleModal';
+import BookinForm from './components/BookingForm'
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <HowItWorks />
       <Rates />
       <Hero />
+      <BookingForm />
       <div className="bg-slate-900">
         <h2>Badgerland Laundry</h2>
       </div>
