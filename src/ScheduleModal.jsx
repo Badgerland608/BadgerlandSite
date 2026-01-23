@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from './lib/supabaseClient';
 
 export default function ScheduleModal({ setShowModal }) {
   const [formData, setFormData] = useState({
