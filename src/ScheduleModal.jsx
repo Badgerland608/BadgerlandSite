@@ -76,8 +76,6 @@ export default function ScheduleModal({ setShowModal }) {
             <option value="">Select Service</option>
             <option value="residential">Residential Wash & Fold</option>
             <option value="commercial">Commercial Laundry</option>
-            <option value="pickup-only">Pickup Only</option>
-            <option value="dry-cleaning">Dry Cleaning</option>
           </select>
 
           <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
