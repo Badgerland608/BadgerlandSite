@@ -3,7 +3,8 @@ import { FaShoppingCart, FaUser } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
 
 function Header({ setShowModal, user, setShowAccount }) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
   const [email, setEmail] = useState('');
