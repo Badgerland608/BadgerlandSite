@@ -87,18 +87,22 @@ function Header({ setShowModal, user, setShowAccount }) {
           <a href="/" className="hover:text-blue-600">Home</a>
           <a href="/About" className="hover:text-blue-600">About</a>
           <div className="relative">
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="hover:text-blue-600"
-            >
-              Services
-            </button>
-            {dropdownOpen && (
-              <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
-                <a href="/about" className="block px-4 py-2 hover:bg-blue-50">About</a>
-                <a href="/contact" className="block px-4 py-2 hover:bg-blue-50">Contact</a>
-              </div>
-            )}
+          <button
+  onClick={() => {
+    setServicesOpen(!servicesOpen);
+    setUserMenuOpen(false);
+  }}
+  className="hover:text-blue-600"
+>
+  Services
+</button>
+
+{servicesOpen && (
+  <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
+    <a href="/about" className="block px-4 py-2 hover:bg-blue-50">About</a>
+    <a href="/contact" className="block px-4 py-2 hover:bg-blue-50">Contact</a>
+  </div>
+)}
           </div>
         </nav>
 
