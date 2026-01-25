@@ -1,6 +1,6 @@
+// cloudflare rebuild 3
 import { useState, useEffect } from 'react';
 import Header from './Header';
-
 import Hero from './Hero';
 import HowItWorks from './HowItWorks';
 import Rates from './Rates';
