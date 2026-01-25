@@ -103,7 +103,7 @@ function Header({ setShowModal, user, setShowAccount }) {
         </nav>
 
         {/* Desktop Icons */}
-        <div className="hidden md:flex items-center gap-4 relative">
+        <div className="hidden md:flex items-center gap-6 relative z-[999]">
 
           <a href="/cart" aria-label="Cart" className="text-purple-900 hover:text-purple-600">
             <FaShoppingCart size={20} />
@@ -121,7 +121,7 @@ function Header({ setShowModal, user, setShowAccount }) {
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-50">
+            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-[999]">
               {!user ? (
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>Sign In</button>
@@ -136,9 +136,10 @@ function Header({ setShowModal, user, setShowAccount }) {
             </div>
           )}
 
+          {/* Desktop Schedule Button */}
           <button
             onClick={() => setShowModal(true)}
-            className="bg-purple-700 text-white px-4 py-2 rounded-full font-semibold shadow hover:bg-purple-600"
+            className="bg-purple-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:bg-purple-600 whitespace-nowrap"
           >
             Schedule Pickup
           </button>
@@ -186,8 +187,8 @@ function Header({ setShowModal, user, setShowAccount }) {
 
             {servicesOpen && (
               <div className="ml-4 space-y-2">
-                <a href="/about" className="block text-blue-700">About</a>
-                <a href="/contact" className="block text-blue-700">Contact</a>
+                <a href="/Residential" className="block text-blue-700">Residential</a>
+                <a href="/Commercial" className="block text-blue-700">Commercial</a>
               </div>
             )}
 
@@ -203,25 +204,26 @@ function Header({ setShowModal, user, setShowAccount }) {
               </>
             )}
 
+            {/* Mobile Schedule Button */}
             <button
-  onClick={() => {
-    setShowModal(true);
-    setMobileMenuOpen(false);
-  }}
-  className="mt-4 w-full bg-purple-700 text-white py-2 rounded-full font-semibold"
->
-  Schedule Pickup
-</button>
+              onClick={() => {
+                setShowModal(true);
+                setMobileMenuOpen(false);
+              }}
+              className="mt-4 w-full bg-purple-700 text-white py-2 rounded-full font-semibold"
+            >
+              Schedule Pickup
+            </button>
           </div>
         </div>
       )}
 
       {/* Auth Modal */}
       {authOpen && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-40" onClick={() => setAuthOpen(false)} />
 
-          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-70">
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-[2001]">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">{mode === 'signin' ? 'Sign In' : 'Create Account'}</h3>
               <button onClick={() => setAuthOpen(false)} className="text-gray-600">✕</button>
