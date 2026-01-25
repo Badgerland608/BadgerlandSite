@@ -17,7 +17,7 @@ function App() {
     <>
       <Header setShowModal={setShowModal} />
 
-      {/* Simple membership bar */}
+      {/* Membership bar */}
       <div className="w-full bg-slate-900 text-white flex justify-center gap-4 py-2 text-sm">
         <span>Become a Badgerland Member for faster scheduling.</span>
         <button
