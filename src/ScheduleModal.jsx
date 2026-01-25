@@ -12,11 +12,15 @@ export default function ScheduleModal({ setShowModal }) {
     service: '',
     detergent: '',
     notificationPreference: '',
+    bags: '',            // NEW
+    estimate: 0          // NEW
   });
 
   const [selectedDate, setSelectedDate] = useState();
   const [selectedTime, setSelectedTime] = useState('');
   const [formComplete, setFormComplete] = useState(false);
+
+  const pricePerBag = 15; // You can change this anytime
 
   const timeSlots = [
     '5:30 AM - 7:30 AM','8:00 AM - 10:00 AM','10:30 AM - 12:30 PM',
@@ -25,10 +29,20 @@ export default function ScheduleModal({ setShowModal }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updated = { ...formData, [name]: value };
+
+    let updated = { ...formData, [name]: value };
+
+    // Auto-calc estimate when bags change
+    if (name === "bags") {
+      const bagsNum = parseInt(value) || 0;
+      updated.estimate = bagsNum * pricePerBag;
+    }
+
     setFormData(updated);
 
-    const isComplete = Object.values(updated).every((val) => val.trim() !== '');
+    const isComplete = Object.values(updated)
+      .filter((v) => typeof v === "string")
+      .every((val) => val.trim() !== '');
     setFormComplete(isComplete);
   };
 
@@ -36,27 +50,29 @@ export default function ScheduleModal({ setShowModal }) {
     e.preventDefault();
 
     const { data, error } = await supabase.functions.invoke("order-notify", {
-  body: {
-    full_name: formData.fullName,
-    address: formData.address,
-    phone: formData.phone,
-    email: formData.email,
-    service: formData.service,
-    detergent: formData.detergent,
-    dryer_sheets: document.getElementById('dryerSheets').checked,
-    instructions: document.querySelector('textarea').value,
-    pickup_date: selectedDate?.toISOString().split('T')[0],
-    pickup_time: selectedTime,
-    notification_preference: formData.notificationPreference,
-    status: "pending"
-  }
-});
+      body: {
+        full_name: formData.fullName,
+        address: formData.address,
+        phone: formData.phone,
+        email: formData.email,
+        service: formData.service,
+        detergent: formData.detergent,
+        dryer_sheets: document.getElementById('dryerSheets').checked,
+        instructions: document.querySelector('textarea').value,
+        pickup_date: selectedDate?.toISOString().split('T')[0],
+        pickup_time: selectedTime,
+        notification_preference: formData.notificationPreference,
+        bags: formData.bags,          // NEW
+        estimate: formData.estimate,  // NEW
+        status: "pending"
+      }
+    });
 
-if (error) {
-  console.error("SUPABASE INSERT ERROR:", error);
-  alert("Something went wrong. Check the console.");
-  return;
-}
+    if (error) {
+      console.error("SUPABASE INSERT ERROR:", error);
+      alert("Something went wrong. Check the console.");
+      return;
+    }
 
     alert('Pickup scheduled! You will receive a confirmation email or text.');
     setShowModal(false);
@@ -75,12 +91,38 @@ if (error) {
           <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
           <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
 
+          {/* SERVICE */}
           <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Service</option>
             <option value="residential">Residential Wash & Fold</option>
             <option value="commercial">Commercial Laundry</option>
           </select>
 
+          {/* ⭐ NEW: BAGS / LOADS SELECTOR */}
+          <label className="block text-sm font-medium text-purple-700">
+            How many bags/loads?
+          </label>
+          <select
+            name="bags"
+            value={formData.bags}
+            onChange={handleChange}
+            className="w-full p-2 border border-purple-300 rounded"
+            required
+          >
+            <option value="">Select amount</option>
+            {Array.from({ length: 24 }, (_, i) => (
+              <option key={i+1} value={i+1}>{i+1}</option>
+            ))}
+          </select>
+
+          {/* ⭐ NEW: ESTIMATE DISPLAY */}
+          {formData.bags && (
+            <p className="text-purple-700 font-semibold">
+              Estimated Cost: <span className="text-purple-900">${formData.estimate}</span>
+            </p>
+          )}
+
+          {/* DETERGENT */}
           <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Detergent</option>
             <option value="gain">Gain</option>
