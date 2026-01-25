@@ -21,8 +21,12 @@ export default function ScheduleModal({ setShowModal, user }) {
   const [formComplete, setFormComplete] = useState(false);
 
   const timeSlots = [
-    '5:30 AM - 7:30 AM','8:00 AM - 10:00 AM','10:30 AM - 12:30 PM',
-    '1:00 PM - 3:00 PM','3:30 PM - 5:30 PM','6:00 PM - 8:00 PM',
+    '5:30 AM - 7:30 AM',
+    '8:00 AM - 10:00 AM',
+    '10:30 AM - 12:30 PM',
+    '1:00 PM - 3:00 PM',
+    '3:30 PM - 5:30 PM',
+    '6:00 PM - 8:00 PM',
   ];
 
   useEffect(() => {
@@ -198,6 +202,85 @@ export default function ScheduleModal({ setShowModal, user }) {
             <option value="tide">Tide</option>
           </select>
 
+          {/* Dryer Sheets */}
           <div className="flex items-center gap-2">
-            <input type="checkbox" id="dryerSheets" className="h-4 w-4 text-purple-600" />
+            <input
+              type="checkbox"
+              id="dryerSheets"
+              className="h-4 w-4 text-purple-600"
+            />
             <label htmlFor="dryerSheets" className="text-sm text-purple-700">
+              Add dryer sheets
+            </label>
+          </div>
+
+          {/* Calendar */}
+          <label className="block text-sm font-medium text-purple-700">
+            Select a pickup date
+          </label>
+          <DayPicker
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            disabled={{ before: new Date() }}
+          />
+
+          {/* Time Slots */}
+          <label className="block text-sm font-medium text-purple-700">
+            Select a pickup time
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {timeSlots.map((slot) => (
+              <button
+                type="button"
+                key={slot}
+                onClick={() => setSelectedTime(slot)}
+                className={`p-2 rounded border ${
+                  selectedTime === slot
+                    ? 'bg-purple-700 text-white'
+                    : 'bg-white text-purple-700 border-purple-300'
+                }`}
+              >
+                {slot}
+              </button>
+            ))}
+          </div>
+
+          {/* Notification Preference */}
+          <label className="block text-sm font-medium text-purple-700">
+            How would you like to be notified?
+          </label>
+          <select
+            name="notificationPreference"
+            value={formData.notificationPreference}
+            onChange={handleChange}
+            className="w-full p-2 border border-purple-300 rounded"
+            required
+          >
+            <option value="">Select preference</option>
+            <option value="email">Email</option>
+            <option value="text">Text Message</option>
+          </select>
+
+          {/* Special Instructions */}
+          <label className="block text-sm font-medium text-purple-700">
+            Special instructions
+          </label>
+          <textarea
+            className="w-full p-2 border border-purple-300 rounded"
+            placeholder="Any special notes for your driver?"
+          ></textarea>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={!formComplete || !selectedDate || !selectedTime}
+            className="w-full bg-purple-700 text-white py-2 rounded font-semibold disabled:opacity-50"
+          >
+            Schedule Pickup
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
