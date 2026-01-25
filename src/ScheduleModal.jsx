@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { supabase } from './lib/supabaseClient';
 
-export default function ScheduleModal({ setShowModal }) {
+export default function ScheduleModal({ setShowModal, user }) {
   const [formData, setFormData] = useState({
     fullName: '',
     address: '',
@@ -25,11 +25,43 @@ export default function ScheduleModal({ setShowModal }) {
     '1:00 PM - 3:00 PM','3:30 PM - 5:30 PM','6:00 PM - 8:00 PM',
   ];
 
+  // Auto-fill from profile if logged in
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, phone, address')
+        .eq('id', user.id)
+        .single();
+
+      const email = user.email || '';
+
+      if (!error && data) {
+        setFormData((prev) => ({
+          ...prev,
+          fullName: data.full_name || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          email
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          email
+        }));
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     let updated = { ...formData, [name]: value };
 
-    // ⭐ OPTION B PRICING LOGIC
+    // OPTION B PRICING LOGIC
     if (name === "bags") {
       const bagsNum = parseInt(value) || 0;
 
@@ -60,6 +92,7 @@ export default function ScheduleModal({ setShowModal }) {
 
     const { data, error } = await supabase.functions.invoke("order-notify", {
       body: {
+        user_id: user?.id ?? null,
         full_name: formData.fullName,
         address: formData.address,
         phone: formData.phone,
@@ -110,7 +143,7 @@ export default function ScheduleModal({ setShowModal }) {
             <option value="commercial">Commercial Laundry</option>
           </select>
 
-          {/* ⭐ BAGS / LOADS SELECTOR WITH WEIGHT + COST */}
+          {/* BAGS / LOADS SELECTOR WITH WEIGHT + COST */}
           <label className="block text-sm font-medium text-purple-700">
             How many bags/loads?
           </label>
@@ -146,7 +179,7 @@ export default function ScheduleModal({ setShowModal }) {
             })}
           </select>
 
-          {/* ⭐ ESTIMATE DISPLAY */}
+          {/* ESTIMATE DISPLAY */}
           {formData.bags && (
             <p className="text-purple-700 font-semibold">
               Estimated Total: <span className="text-purple-900">${formData.estimate}</span>
