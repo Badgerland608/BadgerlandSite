@@ -108,7 +108,7 @@ export default function ScheduleModal({ setShowModal }) {
           </select>
 
           {/* ⭐ BAGS / LOADS SELECTOR */}
-          <label className="text-purple-700 font-medium">
+          <label className="block text-sm font-medium text-purple-700">
             How many bags/loads?
           </label>
           <select
