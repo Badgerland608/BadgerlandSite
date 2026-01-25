@@ -12,15 +12,13 @@ export default function ScheduleModal({ setShowModal }) {
     service: '',
     detergent: '',
     notificationPreference: '',
-    bags: '',            // NEW
-    estimate: 0          // NEW
+    bags: '',
+    estimate: 0
   });
 
   const [selectedDate, setSelectedDate] = useState();
   const [selectedTime, setSelectedTime] = useState('');
   const [formComplete, setFormComplete] = useState(false);
-
-  const pricePerBag = 15; // You can change this anytime
 
   const timeSlots = [
     '5:30 AM - 7:30 AM','8:00 AM - 10:00 AM','10:30 AM - 12:30 PM',
@@ -29,13 +27,24 @@ export default function ScheduleModal({ setShowModal }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     let updated = { ...formData, [name]: value };
 
-    // Auto-calc estimate when bags change
+    // ⭐ OPTION B PRICING LOGIC
     if (name === "bags") {
       const bagsNum = parseInt(value) || 0;
-      updated.estimate = bagsNum * pricePerBag;
+
+      const lbsPerBag = 15;
+      const basePrice = 24;
+      const extraRate = 1.60;
+
+      const totalLbs = bagsNum * lbsPerBag;
+
+      let estimate = basePrice;
+      if (totalLbs > 15) {
+        estimate = basePrice + (totalLbs - 15) * extraRate;
+      }
+
+      updated.estimate = Math.round(estimate * 100) / 100;
     }
 
     setFormData(updated);
@@ -62,8 +71,8 @@ export default function ScheduleModal({ setShowModal }) {
         pickup_date: selectedDate?.toISOString().split('T')[0],
         pickup_time: selectedTime,
         notification_preference: formData.notificationPreference,
-        bags: formData.bags,          // NEW
-        estimate: formData.estimate,  // NEW
+        bags: formData.bags,
+        estimate: formData.estimate,
         status: "pending"
       }
     });
@@ -98,7 +107,7 @@ export default function ScheduleModal({ setShowModal }) {
             <option value="commercial">Commercial Laundry</option>
           </select>
 
-          {/* ⭐ NEW: BAGS / LOADS SELECTOR */}
+          {/* ⭐ BAGS / LOADS SELECTOR */}
           <label className="block text-sm font-medium text-purple-700">
             How many bags/loads?
           </label>
@@ -115,7 +124,7 @@ export default function ScheduleModal({ setShowModal }) {
             ))}
           </select>
 
-          {/* ⭐ NEW: ESTIMATE DISPLAY */}
+          {/* ⭐ ESTIMATE DISPLAY */}
           {formData.bags && (
             <p className="text-purple-700 font-semibold">
               Estimated Cost: <span className="text-purple-900">${formData.estimate}</span>
