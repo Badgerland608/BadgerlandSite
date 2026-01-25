@@ -68,7 +68,7 @@ function Header({ setShowModal, user, setShowAccount }) {
   }
 
   return (
-    <header className="sticky top-0 z-50 bg-gray-50 shadow-md">
+    <header className="sticky top-0 z-[999] bg-gray-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
 
         {/* Logo */}
@@ -155,7 +155,7 @@ function Header({ setShowModal, user, setShowAccount }) {
 
       {/* Slide-In Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-[1000] flex justify-end">
 
           {/* Dim Background */}
           <div
@@ -204,14 +204,14 @@ function Header({ setShowModal, user, setShowAccount }) {
             )}
 
             <button
-              onClick={() => {
-                setShowModal(true);
-                setMobileMenuOpen(false);
-              }}
-              className="mt-4 w-full bg-purple-700 text-white py-2 rounded-full font-semibold"
-            >
-              Schedule Pickup
-            </button>
+  onClick={() => {
+    setShowModal(true);
+    setMobileMenuOpen(false);
+  }}
+  className="mt-4 w-full bg-purple-700 text-white py-2 rounded-full font-semibold"
+>
+  Schedule Pickup
+</button>
           </div>
         </div>
       )}
