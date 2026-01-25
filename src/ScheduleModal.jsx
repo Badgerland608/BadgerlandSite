@@ -121,7 +121,7 @@ export default function ScheduleModal({ setShowModal, user }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-[3000] px-2 sm:px-4">
+    <div className="fixed inset-0 flex justify-center items-center z-[3000] px-2 sm:px-4">
       <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
 
         {/* Close Button */}
