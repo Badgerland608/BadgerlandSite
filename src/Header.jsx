@@ -156,7 +156,7 @@ function Header({ setShowModal, user, setShowAccount }) {
 
       {/* Slide-In Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[900] flex justify-end">
+        <div className="fixed inset-0 z-[500] flex justify-end">
 
           {/* Dim Background */}
           <div
