@@ -110,7 +110,7 @@ export default function ScheduleModal({ setShowModal }) {
             <option value="commercial">Commercial Laundry</option>
           </select>
 
-          {/* ⭐ BAGS / LOADS SELECTOR */}
+          {/* ⭐ BAGS / LOADS SELECTOR WITH WEIGHT + COST */}
           <label className="block text-sm font-medium text-purple-700">
             How many bags/loads?
           </label>
@@ -122,9 +122,28 @@ export default function ScheduleModal({ setShowModal }) {
             required
           >
             <option value="">Select amount</option>
-            {Array.from({ length: 24 }, (_, i) => (
-              <option key={i+1} value={i+1}>{i+1}</option>
-            ))}
+
+            {Array.from({ length: 24 }, (_, i) => {
+              const bags = i + 1;
+              const lbsPerBag = 15;
+              const totalLbs = bags * lbsPerBag;
+
+              const basePrice = 24;
+              const extraRate = 1.60;
+
+              let estimate = basePrice;
+              if (totalLbs > 15) {
+                estimate = basePrice + (totalLbs - 15) * extraRate;
+              }
+
+              const rounded = Math.round(estimate * 100) / 100;
+
+              return (
+                <option key={bags} value={bags}>
+                  {bags} Bags/Loads – {totalLbs} lbs = ${rounded}
+                </option>
+              );
+            })}
           </select>
 
           {/* ⭐ ESTIMATE DISPLAY */}
