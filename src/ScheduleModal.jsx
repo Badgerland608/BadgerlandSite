@@ -101,6 +101,9 @@ export default function ScheduleModal({ setShowModal }) {
           <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
 
           {/* SERVICE */}
+          <label className="block text-sm font-medium text-purple-700">
+            Please select which service you're requesting.
+          </label>
           <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Service</option>
             <option value="residential">Residential Wash & Fold</option>
@@ -132,10 +135,13 @@ export default function ScheduleModal({ setShowModal }) {
           )}
 
           {/* DETERGENT */}
+          <label className="block text-sm font-medium text-purple-700">
+            Which detergent would you like us to use?
+          </label>
           <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Detergent</option>
             <option value="gain">Gain</option>
-            <option value="arm-hammer">Arm & Hammer</option>
+            <option value="arm-hammer">All *Free & Clear*</option>
             <option value="tide">Tide</option>
           </select>
 
