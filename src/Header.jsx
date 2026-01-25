@@ -6,31 +6,27 @@ function Header({ setShowModal, user, setShowAccount }) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [mode, setMode] = useState('signin'); // 'signin' or 'signup'
+  const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const toggleDropdown = () => {
-    setDropdownOpen((prev) => !prev);
-  };
-
   const openAuth = (newMode) => {
     setMode(newMode);
     setAuthOpen(true);
-    setDropdownOpen(false);
+    setUserMenuOpen(false);
   };
 
   const openAccount = () => {
     setShowAccount(true);
-    setDropdownOpen(false);
+    setUserMenuOpen(false);
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setDropdownOpen(false);
+    setUserMenuOpen(false);
   };
 
   async function handleAuthSubmit(e) {
@@ -43,22 +39,16 @@ function Header({ setShowModal, user, setShowAccount }) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: { full_name: fullName }
-          }
+          options: { data: { full_name: fullName } }
         });
-
         if (error) throw error;
-
         alert('Account created! Check your email to confirm.');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
-
         if (error) throw error;
-
         alert('Signed in successfully.');
       }
 
@@ -76,6 +66,7 @@ function Header({ setShowModal, user, setShowAccount }) {
   return (
     <header className="sticky top-0 z-50 bg-gray-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
+
         {/* Logo */}
         <div className="flex items-center gap-2">
           <img src="/logo192.png" alt="Logo" className="h-10 w-10" />
@@ -86,81 +77,82 @@ function Header({ setShowModal, user, setShowAccount }) {
         <nav className="hidden md:flex gap-6 text-blue-900 font-medium">
           <a href="/" className="hover:text-blue-600">Home</a>
           <a href="/About" className="hover:text-blue-600">About</a>
-          <div className="relative">
-          <button
-  onClick={() => {
-    setServicesOpen(!servicesOpen);
-    setUserMenuOpen(false);
-  }}
-  className="hover:text-blue-600"
->
-  Services
-</button>
 
-{servicesOpen && (
-  <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
-    <a href="/about" className="block px-4 py-2 hover:bg-blue-50">About</a>
-    <a href="/contact" className="block px-4 py-2 hover:bg-blue-50">Contact</a>
-  </div>
-)}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setServicesOpen(!servicesOpen);
+                setUserMenuOpen(false);
+              }}
+              className="hover:text-blue-600"
+            >
+              Services
+            </button>
+
+            {servicesOpen && (
+              <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
+                <a href="/about" className="block px-4 py-2 hover:bg-blue-50">About</a>
+                <a href="/contact" className="block px-4 py-2 hover:bg-blue-50">Contact</a>
+              </div>
+            )}
           </div>
         </nav>
 
         {/* Icons + CTA */}
         <div className="flex items-center gap-4 relative">
+
           <a href="/cart" aria-label="Cart" className="text-purple-900 hover:text-purple-600">
-            <FaShoppingCart className="cursor-pointer" size={20} />
+            <FaShoppingCart size={20} />
           </a>
 
-          {/* User icon + dropdown */}
-         <button
-  aria-label="Account"
-  onClick={() => {
-    setUserMenuOpen(!userMenuOpen);
-    setServicesOpen(false);
-  }}
-  className="text-purple-900 hover:text-purple-600 relative"
->
-  <FaUser className="cursor-pointer" size={20} />
-</button>
+          {/* User Icon */}
+          <button
+            aria-label="Account"
+            onClick={() => {
+              setUserMenuOpen(!userMenuOpen);
+              setServicesOpen(false);
+            }}
+            className="text-purple-900 hover:text-purple-600 relative"
+          >
+            <FaUser size={20} />
+          </button>
 
-{userMenuOpen && (
-  <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-50">
-    {!user && (
-      <>
-        <button
-          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-          onClick={() => openAuth('signin')}
-        >
-          Sign In
-        </button>
-        <button
-          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-          onClick={() => openAuth('signup')}
-        >
-          Create Account
-        </button>
-      </>
-    )}
+          {/* User Dropdown */}
+          {userMenuOpen && (
+            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-50">
+              {!user && (
+                <>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+                    onClick={() => openAuth('signin')}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+                    onClick={() => openAuth('signup')}
+                  >
+                    Create Account
+                  </button>
+                </>
+              )}
 
-    {user && (
-      <>
-        <button
-          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-          onClick={openAccount}
-        >
-          My Account
-        </button>
-        <button
-          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-          onClick={handleLogout}
-        >
-          Log Out
-        </button>
-      </>
-    )}
-  </div>
-)}
+              {user && (
+                <>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+                    onClick={openAccount}
+                  >
+                    My Account
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+                    onClick={handleLogout}
+                  >
+                    Log Out
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -179,14 +171,14 @@ function Header({ setShowModal, user, setShowAccount }) {
           <div
             className="absolute inset-0 bg-black opacity-40"
             onClick={() => setAuthOpen(false)}
-            aria-hidden
           />
+
           <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-70">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">
                 {mode === 'signin' ? 'Sign In' : 'Create Account'}
               </h3>
-              <button onClick={() => setAuthOpen(false)} aria-label="Close" className="text-gray-600">✕</button>
+              <button onClick={() => setAuthOpen(false)} className="text-gray-600">✕</button>
             </div>
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
@@ -225,9 +217,7 @@ function Header({ setShowModal, user, setShowAccount }) {
                 />
               </div>
 
-              {errorMsg && (
-                <p className="text-red-600 text-sm">{errorMsg}</p>
-              )}
+              {errorMsg && <p className="text-red-600 text-sm">{errorMsg}</p>}
 
               <div className="flex items-center justify-between">
                 <button
@@ -235,11 +225,7 @@ function Header({ setShowModal, user, setShowAccount }) {
                   disabled={loading}
                   className="bg-purple-800 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
                 >
-                  {loading
-                    ? 'Please wait...'
-                    : mode === 'signin'
-                    ? 'Sign In'
-                    : 'Sign Up'}
+                  {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
                 </button>
 
                 <button
@@ -247,9 +233,7 @@ function Header({ setShowModal, user, setShowAccount }) {
                   onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
                   className="text-sm text-purple-700 underline"
                 >
-                  {mode === 'signin'
-                    ? 'Create an account'
-                    : 'Have an account? Sign in'}
+                  {mode === 'signin' ? 'Create an account' : 'Have an account? Sign in'}
                 </button>
               </div>
             </form>
