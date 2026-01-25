@@ -1,3 +1,5 @@
+// force cloudflare rebuild
+
 import { useState } from 'react';
 import { FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
