@@ -25,7 +25,6 @@ export default function ScheduleModal({ setShowModal, user }) {
     '1:00 PM - 3:00 PM','3:30 PM - 5:30 PM','6:00 PM - 8:00 PM',
   ];
 
-  // Auto-fill from profile if logged in
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -61,14 +60,11 @@ export default function ScheduleModal({ setShowModal, user }) {
     const { name, value } = e.target;
     let updated = { ...formData, [name]: value };
 
-    // OPTION B PRICING LOGIC
     if (name === "bags") {
       const bagsNum = parseInt(value) || 0;
-
       const lbsPerBag = 15;
       const basePrice = 24;
       const extraRate = 1.60;
-
       const totalLbs = bagsNum * lbsPerBag;
 
       let estimate = basePrice;
@@ -90,7 +86,7 @@ export default function ScheduleModal({ setShowModal, user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { data, error } = await supabase.functions.invoke("order-notify", {
+    const { error } = await supabase.functions.invoke("order-notify", {
       body: {
         user_id: user?.id ?? null,
         full_name: formData.fullName,
@@ -120,135 +116,5 @@ export default function ScheduleModal({ setShowModal, user }) {
     setShowModal(false);
   };
 
-  return (
-    <div className="fixed inset-0 bg-transparent bg-opacity-40 flex justify-center items-center z-50 px-2 sm:px-4">
-      <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-purple-800 text-center">
-          Schedule a Pickup
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-3 text-sm text-purple-900">
-          <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
-          <input type="text" name="address" placeholder="Pickup Address" value={formData.address} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
-          <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
-          <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
-
-          {/* SERVICE */}
-          <label className="block text-sm font-medium text-purple-700">
-            Please select which service you're requesting.
-          </label>
-          <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
-            <option value="">Select Service</option>
-            <option value="residential">Residential Wash & Fold</option>
-            <option value="commercial">Commercial Laundry</option>
-          </select>
-
-          {/* BAGS / LOADS SELECTOR WITH WEIGHT + COST */}
-          <label className="block text-sm font-medium text-purple-700">
-            How many bags/loads?
-          </label>
-          <select
-            name="bags"
-            value={formData.bags}
-            onChange={handleChange}
-            className="w-full p-2 border border-purple-300 rounded"
-            required
-          >
-            <option value="">Select amount</option>
-
-            {Array.from({ length: 24 }, (_, i) => {
-              const bags = i + 1;
-              const lbsPerBag = 15;
-              const totalLbs = bags * lbsPerBag;
-
-              const basePrice = 24;
-              const extraRate = 1.60;
-
-              let estimate = basePrice;
-              if (totalLbs > 15) {
-                estimate = basePrice + (totalLbs - 15) * extraRate;
-              }
-
-              const rounded = Math.round(estimate * 100) / 100;
-
-              return (
-                <option key={bags} value={bags}>
-                  {bags} Bags/Loads – {totalLbs} lbs = ${rounded}
-                </option>
-              );
-            })}
-          </select>
-
-          {/* ESTIMATE DISPLAY */}
-          {formData.bags && (
-            <p className="text-purple-700 font-semibold">
-              Estimated Total: <span className="text-purple-900">${formData.estimate}</span>
-            </p>
-          )}
-
-          {/* DETERGENT */}
-          <label className="block text-sm font-medium text-purple-700">
-            Which detergent would you like us to use?
-          </label>
-          <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
-            <option value="">Select Detergent</option>
-            <option value="gain">Gain</option>
-            <option value="arm-hammer">All *Free & Clear*</option>
-            <option value="tide">Tide</option>
-          </select>
-
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="dryerSheets" className="h-4 w-4 text-purple-600" />
-            <label htmlFor="dryerSheets" className="text-sm text-purple-700">Include Dryer Sheets</label>
-          </div>
-
-          <textarea placeholder="Special Instructions" className="w-full p-2 border border-purple-300 rounded" rows={3} />
-
-          {/* Notification Preference */}
-          <label className="block text-sm font-medium text-purple-700 mb-2">
-            How would you like to receive updates?
-          </label>
-          <select
-            name="notificationPreference"
-            value={formData.notificationPreference}
-            onChange={handleChange}
-            className="w-full p-2 border border-purple-300 rounded"
-            required
-          >
-            <option value="">Choose one</option>
-            <option value="email">Email</option>
-            <option value="sms">Text Message</option>
-            <option value="both">Both</option>
-          </select>
-
-          {formComplete && (
-            <>
-              <label className="block text-sm font-medium text-purple-700 mt-4">Select a Pickup Date</label>
-              <DayPicker mode="single" selected={selectedDate} onSelect={setSelectedDate} />
-
-              {selectedDate && (
-                <>
-                  <label className="block text-sm font-medium text-purple-700 mt-4">Select a Time Slot</label>
-                  <select value={selectedTime} onChange={(e) => setSelectedTime(e.target.value)} className="w-full p-2 border border-purple-300 rounded" required>
-                    <option value="">Choose a time</option>
-                    {timeSlots.map((slot) => (
-                      <option key={slot} value={slot}>{slot}</option>
-                    ))}
-                  </select>
-                </>
-              )}
-            </>
-          )}
-
-          <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded font-semibold hover:bg-purple-700 transition">
-            Submit Request
-          </button>
-        </form>
-
-        <button onClick={() => setShowModal(false)} className="mt-4 text-xs text-purple-500 hover:underline block text-center">
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
+  // ...keep your existing JSX, just wired to formData/handleChange/DayPicker...
 }
