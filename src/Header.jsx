@@ -113,48 +113,54 @@ function Header({ setShowModal, user, setShowAccount }) {
           </a>
 
           {/* User icon + dropdown */}
-          <button
-            aria-label="Account"
-            onClick={toggleDropdown}
-            className="text-purple-900 hover:text-purple-600 relative"
-          >
-            <FaUser className="cursor-pointer" size={20} />
-          </button>
+         <button
+  aria-label="Account"
+  onClick={() => {
+    setUserMenuOpen(!userMenuOpen);
+    setServicesOpen(false);
+  }}
+  className="text-purple-900 hover:text-purple-600 relative"
+>
+  <FaUser className="cursor-pointer" size={20} />
+</button>
 
-          {dropdownOpen && (
-            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-50">
-              {!user && (
-                <>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-                    onClick={() => openAuth('signin')}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-                    onClick={() => openAuth('signup')}
-                  >
-                    Create Account
-                  </button>
-                </>
-              )}
-              {user && (
-                <>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-                    onClick={openAccount}
-                  >
-                    My Account
-                  </button>
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
-                    onClick={handleLogout}
-                  >
-                    Log Out
-                  </button>
-                </>
-              )}
+{userMenuOpen && (
+  <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-50">
+    {!user && (
+      <>
+        <button
+          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+          onClick={() => openAuth('signin')}
+        >
+          Sign In
+        </button>
+        <button
+          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+          onClick={() => openAuth('signup')}
+        >
+          Create Account
+        </button>
+      </>
+    )}
+
+    {user && (
+      <>
+        <button
+          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+          onClick={openAccount}
+        >
+          My Account
+        </button>
+        <button
+          className="w-full text-left px-4 py-2 text-sm hover:bg-purple-50"
+          onClick={handleLogout}
+        >
+          Log Out
+        </button>
+      </>
+    )}
+  </div>
+)}
             </div>
           )}
 
