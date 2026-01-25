@@ -68,7 +68,7 @@ function Header({ setShowModal, user, setShowAccount }) {
   }
 
   return (
-    <header className="sticky top-0 z-[999] bg-gray-50 shadow-md">
+    <header className="sticky top-0 z-[1000] bg-gray-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
 
         {/* Logo */}
@@ -103,7 +103,7 @@ function Header({ setShowModal, user, setShowAccount }) {
         </nav>
 
         {/* Desktop Icons */}
-        <div className="hidden md:flex items-center gap-6 relative z-[999]">
+        <div className="hidden md:flex items-center gap-6 relative z-[1000]">
 
           <a href="/cart" aria-label="Cart" className="text-purple-900 hover:text-purple-600">
             <FaShoppingCart size={20} />
@@ -121,7 +121,7 @@ function Header({ setShowModal, user, setShowAccount }) {
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-[999]">
+            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-[1001]">
               {!user ? (
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>Sign In</button>
@@ -156,7 +156,7 @@ function Header({ setShowModal, user, setShowAccount }) {
 
       {/* Slide-In Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[1000] flex justify-end">
+        <div className="fixed inset-0 z-[900] flex justify-end">
 
           {/* Dim Background */}
           <div
