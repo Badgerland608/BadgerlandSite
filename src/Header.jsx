@@ -95,8 +95,8 @@ function Header({ setShowModal, user, setShowAccount }) {
 
             {servicesOpen && (
               <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
-                <a href="/about" className="block px-4 py-2 hover:bg-blue-50">About</a>
-                <a href="/contact" className="block px-4 py-2 hover:bg-blue-50">Contact</a>
+                <a href="/Residential" className="block px-4 py-2 hover:bg-blue-50">Residential</a>
+                <a href="/Commercial" className="block px-4 py-2 hover:bg-blue-50">Commercial</a>
               </div>
             )}
           </div>
