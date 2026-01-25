@@ -108,7 +108,7 @@ export default function ScheduleModal({ setShowModal }) {
           </select>
 
           {/* ⭐ BAGS / LOADS SELECTOR */}
-          <label className="text-purple-700 font-semibold">
+          <label className="text-purple-700 font-medium">
             How many bags/loads?
           </label>
           <select
@@ -127,7 +127,7 @@ export default function ScheduleModal({ setShowModal }) {
           {/* ⭐ ESTIMATE DISPLAY */}
           {formData.bags && (
             <p className="text-purple-700 font-semibold">
-              Estimated Cost: <span className="text-purple-900">${formData.estimate}</span>
+              Estimated Total: <span className="text-purple-900">${formData.estimate}</span>
             </p>
           )}
 
