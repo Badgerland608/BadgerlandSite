@@ -32,7 +32,7 @@ function App() {
   }, []);
 
   return (
-    <>
+    <div className="relative z-0">
       <Header
         setShowModal={setShowModal}
         user={user}
@@ -51,7 +51,7 @@ function App() {
       {showAccount && user && (
         <MyAccount user={user} setShowAccount={setShowAccount} />
       )}
-    </>
+    </div>
   );
 }
 
