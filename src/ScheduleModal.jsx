@@ -35,20 +35,22 @@ export default function ScheduleModal({ setShowModal }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { error } = await supabase.from('orders').insert({
-      full_name: formData.fullName,
-      address: formData.address,
-      phone: formData.phone,
-      email: formData.email,
-      service: formData.service,
-      detergent: formData.detergent,
-      dryer_sheets: document.getElementById('dryerSheets').checked,
-      instructions: document.querySelector('textarea').value,
-      pickup_date: selectedDate?.toISOString().split('T')[0],
-      pickup_time: selectedTime,
-      notification_preference: formData.notificationPreference,
-      status: 'pending'
-    });
+    const { data, error } = await supabase.functions.invoke("order-notify", {
+  body: {
+    full_name: formData.fullName,
+    address: formData.address,
+    phone: formData.phone,
+    email: formData.email,
+    service: formData.service,
+    detergent: formData.detergent,
+    dryer_sheets: document.getElementById('dryerSheets').checked,
+    instructions: document.querySelector('textarea').value,
+    pickup_date: selectedDate?.toISOString().split('T')[0],
+    pickup_time: selectedTime,
+    notification_preference: formData.notificationPreference,
+    status: "pending"
+  }
+});
 
 if (error) {
   console.error("SUPABASE INSERT ERROR:", error);
