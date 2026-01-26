@@ -2,7 +2,7 @@ import React from 'react';
 
 function ServiceArea() {
   return (
-    <section className="bg-gray-100 py-14 text-center">
+    <section className="bg-gray-100 pt-20 pb-20 text-center">
       <h3 className="text-3xl font-bold text-purple-900 mb-8">
         Proudly Serving All of Dane County
       </h3>
