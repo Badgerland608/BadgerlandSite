@@ -41,6 +41,7 @@ function App() {
       />
 
       <Hero />
+      <Intro />
       <HowItWorks />
       <Rates />
 
