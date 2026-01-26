@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import Hero from './Hero';
+import Intro from './Intro';
 import HowItWorks from './HowItWorks';
 import Rates from './Rates';
 import ScheduleModal from './ScheduleModal';
