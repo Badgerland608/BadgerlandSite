@@ -3,7 +3,7 @@ import heroImg from './assets/picturemaybe.jpg'; // update path if needed
 
 function Hero({ setShowModal }) {
   return (
-    <section className="relative text-white py-12 px-6 text-center overflow-hidden">
+    <section className="relative text-white py-16 px-6 text-center overflow-hidden">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -11,7 +11,7 @@ function Hero({ setShowModal }) {
       ></div>
 
       {/* Purple Overlay */}
-      <div className="absolute inset-0 bg-purple-900 bg-opacity-2"></div>
+      <div className="absolute inset-0 bg-purple-900 bg-opacity-0"></div>
       {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
