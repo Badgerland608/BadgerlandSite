@@ -6,6 +6,7 @@ import Intro from './Intro';
 import HowItWorks from './HowItWorks';
 import Rates from './Rates';
 import ServiceArea from './ServiceArea';
+import WhyChooseUs from './WhyChooseUs';
 import ScheduleModal from './ScheduleModal';
 import MyAccount from './MyAccount';
 import { supabase } from './lib/supabaseClient';
@@ -46,6 +47,7 @@ function App() {
       <HowItWorks />
       <Rates />
       <ServiceArea />
+      <WhyChooseUs />
 
       <div className="bg-slate-900 text-white text-center py-4">
         <h2>Badgerland Laundry</h2>
