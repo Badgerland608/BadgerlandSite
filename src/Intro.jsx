@@ -9,7 +9,7 @@ function Intro() {
         </h2>
 
         <p className="text-slate-600 leading-relaxed text-lg">
-          Badgerland Laundry provides reliable wash‑and‑fold laundry service with pickup and delivery throughout Dane County, including Sun Prairie, Madison, Cottage Grove, DeForest, Windsor, Middleton, Fitchburg, Monona, Verona, McFarland, Stoughton, and Waunakee. We help busy families, students, professionals, and local businesses save time with clean, fresh laundry delivered right to their door.
+          Badgerland Laundry provides reliable wash & fold laundry service with pickup and delivery throughout Dane County, including Sun Prairie, Madison, Cottage Grove, DeForest, Windsor, Middleton, Fitchburg, Monona, Verona, McFarland, Stoughton, and Waunakee. We help busy families, students, professionals, and local businesses save time with clean, fresh laundry delivered right to their door.
         </p>
       </div>
     </section>
