@@ -1,5 +1,5 @@
 import React from 'react';
-import heroImg from './assets/picturemaybe.jpg'; // update path if needed
+import heroImg from './assets/pexels-cottonbro-6466227.jpg'; // update path if needed
 
 function Hero({ setShowModal }) {
   return (
