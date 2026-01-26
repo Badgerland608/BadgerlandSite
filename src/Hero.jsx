@@ -11,8 +11,9 @@ function Hero() {
       </h2>
 
       <p className="text-lg text-gray-700 mb-6 max-w-xl mx-auto">
-        Convenient, affordable, and professional laundry care for your home or business.
-      </p>
+        Wash & Fold Laundry Service in Dane County, WI
+Fast, affordable pickup & delivery laundry service for homes, apartments, and businesses across the entire county.
+     </p>
 
       <button
         onClick={() => setShowModal(true)}
