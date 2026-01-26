@@ -16,7 +16,7 @@ function Hero({ setShowModal }) {
 
       {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-semibold text-neutral-900 mb-6 leading-tight tracking-tight">
+        <h1 className="text-4xl md:text-5xl font-semibold text-neutral-900 mb-6 leading-tight tracking-tight text-outline-green">
           Wash & Fold Laundry Service in Dane County
         </h1>
 
