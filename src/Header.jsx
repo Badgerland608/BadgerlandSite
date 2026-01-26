@@ -75,7 +75,7 @@ function Header({ setShowModal, user, setShowAccount }) {
 
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <img src="/logo192.png" alt="Logo" className="h-10 w-10" />
+          <img src="/BL-2.png" alt="BL" className="h-10 w-10" />
           <span className="text-xl font-bold text-purple-800">Badgerland Laundry</span>
         </div>
 
