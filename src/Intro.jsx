@@ -4,7 +4,7 @@ function Intro() {
   return (
     <section className="relative z-10 py-12 px-4 bg-white">
       <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-3xl font-semibold text-slate-800 mb-4">
+        <h2 className="text-3xl text-purple-800 font-semibold text-slate-800 mb-4">
           Wash & Fold Laundry Service in Dane County
         </h2>
 
