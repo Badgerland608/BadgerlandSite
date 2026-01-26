@@ -1,1 +1,5 @@
 @import "tailwindcss";
+.text-outline-green {
+  -webkit-text-stroke: 1px #16a34a;
+  -webkit-text-fill-color: white;
+}
