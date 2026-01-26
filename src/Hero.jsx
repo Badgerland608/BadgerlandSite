@@ -3,7 +3,7 @@ import heroImg from './assets/picturemaybe.jpg'; // update path if needed
 
 function Hero({ setShowModal }) {
   return (
-    <section className="relative text-white py-24 px-6 text-center overflow-hidden">
+    <section className="relative text-white py-12 px-6 text-center overflow-hidden">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center"
