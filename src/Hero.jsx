@@ -1,5 +1,5 @@
 import React from 'react';
-import heroImg from './assets/picturemaybe.jpg; // update path if needed
+import heroImg from './assets/picturemaybe.jpg'; // update path if needed
 
 function Hero({ setShowModal }) {
   return (
@@ -34,3 +34,19 @@ function Hero({ setShowModal }) {
 
         {/* Trust Bar */}
         <div className="mt-10 flex flex-wrap justify-center gap-6 text-purple-100 text-sm md:text-base">
+          <span className="bg-white bg-opacity-20 px-4 py-2 rounded-full">
+            Next‑Day Delivery
+          </span>
+          <span className="bg-white bg-opacity-20 px-4 py-2 rounded-full">
+            Locally Owned
+          </span>
+          <span className="bg-white bg-opacity-20 px-4 py-2 rounded-full">
+            Free Pickup
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default Hero;
