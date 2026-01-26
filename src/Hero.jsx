@@ -1,30 +1,36 @@
-import React, { useState } from 'react';
-import ScheduleModal from './ScheduleModal'; // Adjust path if needed
+import React from 'react';
+import heroImg from './assets/SMyhtWhbSv23sKnDmTw9e.jpeg'; // update path if needed
 
-function Hero() {
-  const [showModal, setShowModal] = useState(false);
-
+function Hero({ setShowModal }) {
   return (
-    <section className="bg-gradient-to-r from-purple-100 to-white py-12 text-center">
-      <h2 className="text-3xl font-bold text-purple-900 mb-4">
-        Badgerland Laundry
-      </h2>
+    <section className="relative text-white py-24 px-6 text-center overflow-hidden">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${heroImg})` }}
+      ></div>
 
-      <p className="text-lg text-gray-700 mb-6 max-w-xl mx-auto">
-        Wash & Fold Laundry Service in Dane County, WI
-Fast, affordable pickup & delivery laundry service for homes, apartments, and businesses across the entire county.
-     </p>
+      {/* Purple Overlay */}
+      <div className="absolute inset-0 bg-purple-900 bg-opacity-70"></div>
 
-      <button
-        onClick={() => setShowModal(true)}
-        className="inline-block bg-gradient-to-r from-purple-600 to-purple-400 text-white font-semibold text-lg px-9 py-3 rounded-full shadow-md hover:from-purple-700 hover:to-purple-500 transition-all duration-200"
-      >
-        Schedule a Pickup
-      </button>
+      {/* Content */}
+      <div className="relative z-10 max-w-3xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
+          Wash & Fold Laundry Service in Dane County
+        </h1>
 
-      {showModal && <ScheduleModal setShowModal={setShowModal} />}
-    </section>
-  );
-}
+        <p className="text-lg md:text-xl text-purple-100 leading-relaxed mb-10">
+          Fast, affordable pickup & delivery laundry service for busy families,
+          students, and professionals. Fresh, folded laundry delivered right to
+          your door — the very next day.
+        </p>
 
-export default Hero;
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-white text-purple-900 font-semibold px-10 py-3 rounded-full shadow-md hover:bg-purple-100 transition"
+        >
+          Schedule Your Pickup
+        </button>
+
+        {/* Trust Bar */}
+        <div className="mt-10 flex flex-wrap justify-center gap-6 text-purple-100 text-sm md:text-base">
