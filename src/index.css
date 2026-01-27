@@ -1,6 +1,6 @@
 @import "tailwindcss";
 .text-outline-silver {
-  -webkit-text-stroke: 1 px #d1d5db;
+  -webkit-text-stroke: 1px #d1d5db;
   -webkit-text-fill-color: green;
-  letterSpacing: '1 px'
+  letter-spacing: '1px'
 }
