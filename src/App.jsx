@@ -1,4 +1,5 @@
 // cloudflare rebuild 3
+
 import { useState, useEffect } from 'react';
 import Header from './Header';
 import Hero from './Hero';
@@ -11,11 +12,13 @@ import FAQ from './FAQ';
 import FinalCTA from './FinalCTA';
 import ScheduleModal from './ScheduleModal';
 import MyAccount from './MyAccount';
+import AdminDashboard from './AdminDashboard'; // 👈 add this
 import { supabase } from './lib/supabaseClient';
 
 function App() {
   const [showModal, setShowModal] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false); // 👈 add this
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -36,6 +39,32 @@ function App() {
     };
   }, []);
 
+  // If admin view is open, show only the dashboard
+  if (showAdmin) {
+    return (
+      <div className="relative z-0">
+        <Header
+          setShowModal={setShowModal}
+          user={user}
+          setShowAccount={setShowAccount}
+        />
+
+        {/* Simple back button */}
+        <div className="p-4">
+          <button
+            onClick={() => setShowAdmin(false)}
+            className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
+          >
+            Back to site
+          </button>
+        </div>
+
+        <AdminDashboard />
+      </div>
+    );
+  }
+
+  // Normal site view
   return (
     <div className="relative z-0">
       <Header
@@ -43,6 +72,18 @@ function App() {
         user={user}
         setShowAccount={setShowAccount}
       />
+
+      {/* Temporary admin button – only shows when logged in */}
+      {user && (
+        <div className="p-4">
+          <button
+            onClick={() => setShowAdmin(true)}
+            className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
+          >
+            Open Admin Dashboard
+          </button>
+        </div>
+      )}
 
       <Hero />
       <Intro />
