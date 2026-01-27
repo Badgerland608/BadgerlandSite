@@ -90,6 +90,8 @@ function App() {
           setShowModal={setShowModal}
           user={user}
           setShowAccount={setShowAccount}
+          isAdmin={isAdmin}
+          setShowAdmin={setShowAdmin}
         />
 
         <div className="p-4">
@@ -113,6 +115,8 @@ function App() {
         setShowModal={setShowModal}
         user={user}
         setShowAccount={setShowAccount}
+        isAdmin={isAdmin}
+        setShowAdmin={setShowAdmin}
       />
 
       {/* Admin button — only visible to admins */}
