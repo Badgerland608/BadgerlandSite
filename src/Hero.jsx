@@ -15,7 +15,7 @@ function Hero({ setShowModal }) {
       ></div>
 
       {/* Overlay */}
-      <div className="absolute inset-0 bg-purple-800 bg-opacity-0"></div>
+      
 
       {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto">
