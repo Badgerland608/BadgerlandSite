@@ -25,27 +25,38 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [profileError, setProfileError] = useState(null);
+
   // Load session + profile
   useEffect(() => {
     const loadUserAndProfile = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-      const authUser = session?.user ?? null;
-      setUser(authUser);
+        const authUser = session?.user ?? null;
+        setUser(authUser);
 
-      if (authUser) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', authUser.id)
-          .single();
+        if (authUser) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', authUser.id)
+            .single();
 
-        setIsAdmin(profile?.is_admin === true);
-      } else {
-        setIsAdmin(false);
+          if (error) throw error;
+
+          setIsAdmin(profile?.is_admin === true);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        setProfileError(err.message);
       }
+
+      setLoadingUser(false);
     };
 
     loadUserAndProfile();
@@ -73,6 +84,24 @@ function App() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  // Loading state prevents flicker
+  if (loadingUser) {
+    return (
+      <div className="p-10 text-center text-gray-600">
+        Loading...
+      </div>
+    );
+  }
+
+  // Error state
+  if (profileError) {
+    return (
+      <div className="p-10 text-center text-red-600">
+        Error loading profile: {profileError}
+      </div>
+    );
+  }
 
   // Admin view (protected)
   if (showAdmin) {
@@ -103,7 +132,7 @@ function App() {
           </button>
         </div>
 
-        <AdminDashboard />
+        <AdminDashboard user={user} />
       </div>
     );
   }

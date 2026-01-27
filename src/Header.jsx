@@ -70,6 +70,15 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
     setLoading(false);
   }
 
+  // Require login before scheduling
+  const handleScheduleClick = () => {
+    if (!user) {
+      openAuth('signin');
+      return;
+    }
+    setShowModal(true);
+  };
+
   return (
     <header className="sticky top-0 z-[1000] bg-gray-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
@@ -124,7 +133,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-[1001]">
+            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-56 z-[1001]">
 
               {!user ? (
                 <>
@@ -135,7 +144,11 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>My Account</button>
 
-                  {/* ADMIN DASHBOARD BUTTON */}
+                  {/* Future-proofed user menu */}
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50">My Orders</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50">My Subscription</button>
+
+                  {/* Admin */}
                   {isAdmin && (
                     <button
                       className="w-full text-left px-4 py-2 hover:bg-purple-50 text-purple-700 font-semibold"
@@ -157,7 +170,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
           {/* Desktop Schedule Button */}
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleScheduleClick}
             className="bg-purple-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:bg-purple-600 whitespace-nowrap"
           >
             Schedule Pickup
@@ -177,23 +190,19 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[500] flex justify-end">
 
-          {/* Dim Background */}
           <div
             className="flex-1 bg-black bg-opacity-40"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          {/* Drawer */}
           <div className="w-64 bg-white h-full shadow-xl p-5 flex flex-col gap-4 animate-slide-left">
 
-            {/* Close Button */}
             <div className="flex justify-end">
               <button onClick={() => setMobileMenuOpen(false)} className="text-purple-900">
                 <FaTimes size={24} />
               </button>
             </div>
 
-            {/* Menu Items */}
             <a href="/" className="text-blue-900 font-medium">Home</a>
             <a href="/About" className="text-blue-900 font-medium">About</a>
 
@@ -219,8 +228,9 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             ) : (
               <>
                 <button className="text-left text-purple-700" onClick={openAccount}>My Account</button>
+                <button className="text-left text-purple-700">My Orders</button>
+                <button className="text-left text-purple-700">My Subscription</button>
 
-                {/* ADMIN BUTTON IN MOBILE MENU */}
                 {isAdmin && (
                   <button
                     className="text-left text-purple-700 font-semibold"
@@ -237,10 +247,9 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
               </>
             )}
 
-            {/* Mobile Schedule Button */}
             <button
               onClick={() => {
-                setShowModal(true);
+                handleScheduleClick();
                 setMobileMenuOpen(false);
               }}
               className="mt-4 w-full bg-purple-700 text-white py-2 rounded-full font-semibold"
