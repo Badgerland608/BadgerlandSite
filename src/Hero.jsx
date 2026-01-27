@@ -1,5 +1,5 @@
 import React from 'react';
-import heroImg from './assets/HeroImage1.jpg';
+import heroImg from './assets/HeroImage3.jpg';
 
 function Hero({ setShowModal }) {
   return (
