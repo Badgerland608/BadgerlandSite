@@ -1,5 +1,5 @@
 import React from 'react';
-import heroImg from './assets/pexels-cottonbro-6466227.jpg';
+import heroImg from './assets/abi-ghouta-timur-X9yiw8oLlbE-unsplash.jpg';
 
 function Hero({ setShowModal }) {
   return (
@@ -14,9 +14,12 @@ function Hero({ setShowModal }) {
         }}
       ></div>
 
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-purple-800 bg-opacity-20"></div>
+
       {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-semibold text-green-800 mb-6 leading-tight tracking-normal md:tracking-tight; text-outline-silver">
+        <h1 className="text-5xl md:text-6xl font-semibold text-green-800 mb-6 leading-tight tracking-normal md:tracking-tight; text-outline-silver">
           Wash & Fold Laundry Service in Dane County
         </h1>
 
