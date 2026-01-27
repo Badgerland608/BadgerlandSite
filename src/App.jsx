@@ -1,6 +1,7 @@
-// cloudflare rebuild 3
+// cloudflare rebuild 4
 
 import { useState, useEffect } from 'react';
+
 import Header from './Header';
 import Hero from './Hero';
 import Intro from './Intro';
@@ -12,25 +13,59 @@ import FAQ from './FAQ';
 import FinalCTA from './FinalCTA';
 import ScheduleModal from './ScheduleModal';
 import MyAccount from './MyAccount';
-import AdminDashboard from './AdminDashboard'; // 👈 add this
+import AdminDashboard from './AdminDashboard';
+
 import { supabase } from './lib/supabaseClient';
 
 function App() {
   const [showModal, setShowModal] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false); // 👈 add this
-  const [user, setUser] = useState(null);
+  const [showAdmin, setShowAdmin] = useState(false);
 
+  const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Load session + profile
   useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user ?? null);
+    const loadUserAndProfile = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const authUser = session?.user ?? null;
+      setUser(authUser);
+
+      if (authUser) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authUser.id)
+          .single();
+
+        setIsAdmin(profile?.is_admin === true);
+      } else {
+        setIsAdmin(false);
+      }
     };
-    getSession();
+
+    loadUserAndProfile();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
+      async (_event, session) => {
+        const authUser = session?.user ?? null;
+        setUser(authUser);
+
+        if (authUser) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', authUser.id)
+            .single();
+
+          setIsAdmin(profile?.is_admin === true);
+        } else {
+          setIsAdmin(false);
+        }
       }
     );
 
@@ -39,8 +74,16 @@ function App() {
     };
   }, []);
 
-  // If admin view is open, show only the dashboard
+  // Admin view (protected)
   if (showAdmin) {
+    if (!isAdmin) {
+      return (
+        <div className="p-6 text-red-600 text-center">
+          Not authorized.
+        </div>
+      );
+    }
+
     return (
       <div className="relative z-0">
         <Header
@@ -49,7 +92,6 @@ function App() {
           setShowAccount={setShowAccount}
         />
 
-        {/* Simple back button */}
         <div className="p-4">
           <button
             onClick={() => setShowAdmin(false)}
@@ -73,8 +115,8 @@ function App() {
         setShowAccount={setShowAccount}
       />
 
-      {/* Temporary admin button – only shows when logged in */}
-      {user && (
+      {/* Admin button — only visible to admins */}
+      {user && isAdmin && (
         <div className="p-4">
           <button
             onClick={() => setShowAdmin(true)}
@@ -98,7 +140,10 @@ function App() {
         <h2>Badgerland Laundry</h2>
       </div>
 
-      {showModal && <ScheduleModal setShowModal={setShowModal} user={user} />}
+      {showModal && (
+        <ScheduleModal setShowModal={setShowModal} user={user} />
+      )}
+
       {showAccount && user && (
         <MyAccount user={user} setShowAccount={setShowAccount} />
       )}

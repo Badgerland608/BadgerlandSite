@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
 
-function Header({ setShowModal, user, setShowAccount }) {
+function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -124,6 +125,7 @@ function Header({ setShowModal, user, setShowAccount }) {
 
           {userMenuOpen && (
             <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-48 z-[1001]">
+
               {!user ? (
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>Sign In</button>
@@ -132,9 +134,24 @@ function Header({ setShowModal, user, setShowAccount }) {
               ) : (
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>My Account</button>
+
+                  {/* ADMIN DASHBOARD BUTTON */}
+                  {isAdmin && (
+                    <button
+                      className="w-full text-left px-4 py-2 hover:bg-purple-50 text-purple-700 font-semibold"
+                      onClick={() => {
+                        setShowAdmin(true);
+                        setUserMenuOpen(false);
+                      }}
+                    >
+                      Admin Dashboard
+                    </button>
+                  )}
+
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={handleLogout}>Log Out</button>
                 </>
               )}
+
             </div>
           )}
 
@@ -202,6 +219,20 @@ function Header({ setShowModal, user, setShowAccount }) {
             ) : (
               <>
                 <button className="text-left text-purple-700" onClick={openAccount}>My Account</button>
+
+                {/* ADMIN BUTTON IN MOBILE MENU */}
+                {isAdmin && (
+                  <button
+                    className="text-left text-purple-700 font-semibold"
+                    onClick={() => {
+                      setShowAdmin(true);
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    Admin Dashboard
+                  </button>
+                )}
+
                 <button className="text-left text-purple-700" onClick={handleLogout}>Log Out</button>
               </>
             )}
@@ -232,6 +263,7 @@ function Header({ setShowModal, user, setShowAccount }) {
             </div>
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
+
               {mode === 'signup' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Full Name</label>
@@ -260,6 +292,7 @@ function Header({ setShowModal, user, setShowAccount }) {
                   {mode === 'signin' ? 'Create an account' : 'Have an account? Sign in'}
                 </button>
               </div>
+
             </form>
           </div>
         </div>
