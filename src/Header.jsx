@@ -144,10 +144,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>My Account</button>
 
-                  {/* Future-proofed user menu */}
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50">My Orders</button>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50">My Subscription</button>
-
                   {/* Admin */}
                   {isAdmin && (
                     <button
@@ -228,8 +224,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             ) : (
               <>
                 <button className="text-left text-purple-700" onClick={openAccount}>My Account</button>
-                <button className="text-left text-purple-700">My Orders</button>
-                <button className="text-left text-purple-700">My Subscription</button>
 
                 {isAdmin && (
                   <button
@@ -256,6 +250,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             >
               Schedule Pickup
             </button>
+
           </div>
         </div>
       )}
@@ -266,6 +261,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
           <div className="absolute inset-0 bg-black opacity-40" onClick={() => setAuthOpen(false)} />
 
           <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-[2001]">
+
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">{mode === 'signin' ? 'Sign In' : 'Create Account'}</h3>
               <button onClick={() => setAuthOpen(false)} className="text-gray-600">✕</button>
@@ -303,6 +299,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
               </div>
 
             </form>
+
           </div>
         </div>
       )}
