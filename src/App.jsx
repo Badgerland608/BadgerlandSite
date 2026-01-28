@@ -44,9 +44,11 @@ function App() {
             .from('profiles')
             .select('is_admin')
             .eq('id', authUser.id)
-            .single();
+            .maybeSingle(); // SAFE
 
-          if (error) throw error;
+          if (error && error.code !== "PGRST116") {
+            throw error;
+          }
 
           setIsAdmin(profile?.is_admin === true);
         } else {
@@ -61,6 +63,7 @@ function App() {
 
     loadUserAndProfile();
 
+    // Auth listener
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const authUser = session?.user ?? null;
@@ -71,7 +74,7 @@ function App() {
             .from('profiles')
             .select('is_admin')
             .eq('id', authUser.id)
-            .single();
+            .maybeSingle(); // SAFE
 
           setIsAdmin(profile?.is_admin === true);
         } else {
@@ -85,7 +88,7 @@ function App() {
     };
   }, []);
 
-  // Loading state prevents flicker
+  // Loading state
   if (loadingUser) {
     return (
       <div className="p-10 text-center text-gray-600">
@@ -103,7 +106,7 @@ function App() {
     );
   }
 
-  // Admin view (protected)
+  // Admin view
   if (showAdmin) {
     if (!isAdmin) {
       return (
@@ -148,7 +151,6 @@ function App() {
         setShowAdmin={setShowAdmin}
       />
 
-      {/* Admin button — only visible to admins */}
       {user && isAdmin && (
         <div className="p-4">
           <button
