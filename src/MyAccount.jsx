@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
 
 export default function MyAccount({ user, setShowAccount }) {
+  const [activeTab, setActiveTab] = useState('profile'); // profile | subscription | orders
+
   const [profile, setProfile] = useState({
     full_name: '',
     phone: '',
@@ -10,6 +12,7 @@ export default function MyAccount({ user, setShowAccount }) {
 
   const [orders, setOrders] = useState([]);
   const [subscription, setSubscription] = useState(null);
+
   const [notifySettings, setNotifySettings] = useState({
     email_enabled: true,
     sms_enabled: false,
@@ -28,7 +31,7 @@ export default function MyAccount({ user, setShowAccount }) {
         .from('profiles')
         .select('full_name, phone, address')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         setProfile({
@@ -44,7 +47,7 @@ export default function MyAccount({ user, setShowAccount }) {
         .select('*')
         .eq('user_id', user.id)
         .eq('active', true)
-        .single();
+        .maybeSingle();
 
       if (subData) setSubscription(subData);
 
@@ -53,7 +56,7 @@ export default function MyAccount({ user, setShowAccount }) {
         .from('notification_settings')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (notifyData) {
         setNotifySettings({
@@ -117,125 +120,166 @@ export default function MyAccount({ user, setShowAccount }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-2 sm:px-4">
-      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
 
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-purple-800 text-center">
+        <h2 className="text-2xl font-bold mb-4 text-purple-800 text-center">
           My Account
         </h2>
+
+        {/* TAB NAVIGATION */}
+        <div className="flex justify-center gap-4 mb-6 border-b pb-2">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`pb-1 font-semibold ${
+              activeTab === 'profile'
+                ? 'text-purple-800 border-b-2 border-purple-800'
+                : 'text-gray-500'
+            }`}
+          >
+            Profile
+          </button>
+
+          <button
+            onClick={() => setActiveTab('subscription')}
+            className={`pb-1 font-semibold ${
+              activeTab === 'subscription'
+                ? 'text-purple-800 border-b-2 border-purple-800'
+                : 'text-gray-500'
+            }`}
+          >
+            Subscription
+          </button>
+
+          <button
+            onClick={() => setActiveTab('orders')}
+            className={`pb-1 font-semibold ${
+              activeTab === 'orders'
+                ? 'text-purple-800 border-b-2 border-purple-800'
+                : 'text-gray-500'
+            }`}
+          >
+            Orders
+          </button>
+        </div>
 
         {loading ? (
           <p className="text-center text-sm text-purple-700">Loading your info...</p>
         ) : (
           <>
-            {/* PROFILE FORM */}
-            <form onSubmit={handleSave} className="space-y-3 text-sm text-purple-900 mb-6">
-              <h3 className="font-semibold text-purple-800">Profile</h3>
+            {/* PROFILE TAB */}
+            {activeTab === 'profile' && (
+              <form onSubmit={handleSave} className="space-y-3 text-sm text-purple-900 mb-6">
+                <h3 className="font-semibold text-purple-800">Profile Info</h3>
 
-              <input
-                type="text"
-                name="full_name"
-                placeholder="Full Name"
-                value={profile.full_name}
-                onChange={handleChange}
-                className="w-full p-2 border border-purple-300 rounded"
-              />
-
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone Number"
-                value={profile.phone}
-                onChange={handleChange}
-                className="w-full p-2 border border-purple-300 rounded"
-              />
-
-              <input
-                type="text"
-                name="address"
-                placeholder="Default Pickup Address"
-                value={profile.address}
-                onChange={handleChange}
-                className="w-full p-2 border border-purple-300 rounded"
-              />
-
-              {/* NOTIFICATION SETTINGS */}
-              <h3 className="font-semibold text-purple-800 mt-4">Notifications</h3>
-
-              <label className="flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  name="email_enabled"
-                  checked={notifySettings.email_enabled}
-                  onChange={handleNotifyChange}
+                  type="text"
+                  name="full_name"
+                  placeholder="Full Name"
+                  value={profile.full_name}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-purple-300 rounded"
                 />
-                Email Notifications
-              </label>
 
-              <label className="flex items-center gap-2">
                 <input
-                  type="checkbox"
-                  name="sms_enabled"
-                  checked={notifySettings.sms_enabled}
-                  onChange={handleNotifyChange}
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone Number"
+                  value={profile.phone}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-purple-300 rounded"
                 />
-                SMS Notifications
-              </label>
 
-              <input
-                type="text"
-                name="phone"
-                placeholder="SMS Phone Number"
-                value={notifySettings.phone}
-                onChange={handleNotifyChange}
-                className="w-full p-2 border border-purple-300 rounded"
-              />
+                <input
+                  type="text"
+                  name="address"
+                  placeholder="Default Pickup Address"
+                  value={profile.address}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-purple-300 rounded"
+                />
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-purple-600 text-white py-2 rounded font-semibold hover:bg-purple-700 transition disabled:opacity-60"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </form>
+                <h3 className="font-semibold text-purple-800 mt-4">Notifications</h3>
 
-            {/* SUBSCRIPTION SECTION */}
-            <div className="text-sm text-purple-900 mb-6">
-              <h3 className="font-semibold text-purple-800 mb-2">Subscription</h3>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="email_enabled"
+                    checked={notifySettings.email_enabled}
+                    onChange={handleNotifyChange}
+                  />
+                  Email Notifications
+                </label>
 
-              {!subscription ? (
-                <p className="text-purple-700">No active subscription.</p>
-              ) : (
-                <div className="border border-purple-200 rounded p-3 bg-purple-50">
-                  <p><strong>Plan:</strong> {subscription.plan_name}</p>
-                  <p><strong>Included lbs:</strong> {subscription.included_lbs}</p>
-                  <p><strong>Extra rate:</strong> ${subscription.extra_rate}/lb</p>
-                  <p><strong>Renews:</strong> {subscription.renewal_date}</p>
-                </div>
-              )}
-            </div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="sms_enabled"
+                    checked={notifySettings.sms_enabled}
+                    onChange={handleNotifyChange}
+                  />
+                  SMS Notifications
+                </label>
 
-            {/* ORDER HISTORY */}
-            <div className="text-sm text-purple-900">
-              <h3 className="font-semibold text-purple-800 mb-2">Order History</h3>
+                <input
+                  type="text"
+                  name="phone"
+                  placeholder="SMS Phone Number"
+                  value={notifySettings.phone}
+                  onChange={handleNotifyChange}
+                  className="w-full p-2 border border-purple-300 rounded"
+                />
 
-              {orders.length === 0 && (
-                <p className="text-purple-700">No orders yet. Schedule your first pickup!</p>
-              )}
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full bg-purple-600 text-white py-2 rounded font-semibold hover:bg-purple-700 transition disabled:opacity-60"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </form>
+            )}
 
-              {orders.map((order) => (
-                <div key={order.id} className="border border-purple-200 rounded p-2 mb-2">
-                  <p><strong>Status:</strong> {order.status.replace(/_/g, ' ')}</p>
-                  <p><strong>Pounds:</strong> {order.pounds}</p>
-                  <p><strong>Total:</strong> ${order.total_price?.toFixed(2)}</p>
-                  <p><strong>Pickup:</strong> {order.pickup_time}</p>
-                  <p><strong>Delivery:</strong> {order.delivery_time}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(order.created_at).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {/* SUBSCRIPTION TAB */}
+            {activeTab === 'subscription' && (
+              <div className="text-sm text-purple-900 mb-6">
+                <h3 className="font-semibold text-purple-800 mb-2">Subscription</h3>
+
+                {!subscription ? (
+                  <p className="text-purple-700">No active subscription.</p>
+                ) : (
+                  <div className="border border-purple-200 rounded p-3 bg-purple-50">
+                    <p><strong>Plan:</strong> {subscription.plan_name}</p>
+                    <p><strong>Included lbs:</strong> {subscription.included_lbs}</p>
+                    <p><strong>Extra rate:</strong> ${subscription.extra_rate}/lb</p>
+                    <p><strong>Renews:</strong> {subscription.renewal_date}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ORDERS TAB */}
+            {activeTab === 'orders' && (
+              <div className="text-sm text-purple-900">
+                <h3 className="font-semibold text-purple-800 mb-2">Order History</h3>
+
+                {orders.length === 0 && (
+                  <p className="text-purple-700">No orders yet. Schedule your first pickup!</p>
+                )}
+
+                {orders.map((order) => (
+                  <div key={order.id} className="border border-purple-200 rounded p-2 mb-2">
+                    <p><strong>Status:</strong> {order.status.replace(/_/g, ' ')}</p>
+                    <p><strong>Pounds:</strong> {order.pounds}</p>
+                    <p><strong>Total:</strong> ${order.total_price?.toFixed(2)}</p>
+                    <p><strong>Pickup:</strong> {order.pickup_time}</p>
+                    <p><strong>Delivery:</strong> {order.delivery_time}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(order.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 

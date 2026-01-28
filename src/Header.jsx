@@ -70,7 +70,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
     setLoading(false);
   }
 
-  // Require login before scheduling
   const handleScheduleClick = () => {
     if (!user) {
       openAuth('signin');
@@ -144,7 +143,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>My Account</button>
 
-                  {/* Admin */}
                   {isAdmin && (
                     <button
                       className="w-full text-left px-4 py-2 hover:bg-purple-50 text-purple-700 font-semibold"
@@ -164,7 +162,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             </div>
           )}
 
-          {/* Desktop Schedule Button */}
           <button
             onClick={handleScheduleClick}
             className="bg-purple-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:bg-purple-600 whitespace-nowrap"
@@ -182,7 +179,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
         </button>
       </div>
 
-      {/* Slide-In Drawer */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[500] flex justify-end">
 
