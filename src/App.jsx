@@ -26,7 +26,7 @@ function App() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [profileError, setProfileError] = useState(null);
 
-  // Load session + profile
+  // Load session + profile safely
   useEffect(() => {
     const loadUserAndProfile = async () => {
       try {
@@ -42,15 +42,20 @@ function App() {
             .from('profiles')
             .select('is_admin')
             .eq('id', authUser.id)
-            .single();
+            .maybeSingle(); // SAFE: does NOT throw if missing
 
-          if (error) throw error;
-
-          setIsAdmin(profile?.is_admin === true);
+          // If no profile row exists, treat as non-admin
+          if (error) {
+            console.warn("Profile load error:", error.message);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(profile?.is_admin === true);
+          }
         } else {
           setIsAdmin(false);
         }
       } catch (err) {
+        console.error("Profile load exception:", err);
         setProfileError(err.message);
       }
 
@@ -59,6 +64,7 @@ function App() {
 
     loadUserAndProfile();
 
+    // Auth listener
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const authUser = session?.user ?? null;
@@ -69,7 +75,7 @@ function App() {
             .from('profiles')
             .select('is_admin')
             .eq('id', authUser.id)
-            .single();
+            .maybeSingle();
 
           setIsAdmin(profile?.is_admin === true);
         } else {
@@ -83,7 +89,7 @@ function App() {
     };
   }, []);
 
-  // Loading state prevents flicker
+  // Loading state
   if (loadingUser) {
     return (
       <div className="p-10 text-center text-gray-600">
@@ -101,7 +107,7 @@ function App() {
     );
   }
 
-  // Admin view (protected)
+  // Admin view
   if (showAdmin) {
     if (!isAdmin) {
       return (
@@ -146,7 +152,6 @@ function App() {
         setShowAdmin={setShowAdmin}
       />
 
-      {/* Admin button — only visible to admins */}
       {user && isAdmin && (
         <div className="p-4">
           <button
