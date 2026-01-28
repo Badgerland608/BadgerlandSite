@@ -13,8 +13,12 @@ export default function ScheduleModal({ setShowModal, user }) {
     detergent: '',
     notificationPreference: '',
     bags: '',
-    estimate: 0
+    estimate: 0,
+    dryerSheets: false,
+    instructions: ''
   });
+
+  const [subscription, setSubscription] = useState(null);
 
   const [selectedDate, setSelectedDate] = useState();
   const [selectedTime, setSelectedTime] = useState('');
@@ -35,12 +39,12 @@ export default function ScheduleModal({ setShowModal, user }) {
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
 
-  // Load profile
+  // Load profile + subscription
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, phone, address')
         .eq('id', user.id)
@@ -48,17 +52,27 @@ export default function ScheduleModal({ setShowModal, user }) {
 
       const email = user.email || '';
 
-      if (!error && data) {
+      if (profile) {
         setFormData((prev) => ({
           ...prev,
-          fullName: data.full_name || '',
-          phone: data.phone || '',
-          address: data.address || '',
+          fullName: profile.full_name || '',
+          phone: profile.phone || '',
+          address: profile.address || '',
           email
         }));
       } else {
         setFormData((prev) => ({ ...prev, email }));
       }
+
+      // Load subscription
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('active', true)
+        .single();
+
+      if (sub) setSubscription(sub);
     };
 
     loadProfile();
@@ -92,36 +106,37 @@ export default function ScheduleModal({ setShowModal, user }) {
     loadCounts();
   }, [selectedDate]);
 
-  const isSlotFull = (slot) => {
-    return (slotCounts[slot] || 0) >= MAX_PER_SLOT;
-  };
-
-  const spotsLeft = (slot) => {
-    const used = slotCounts[slot] || 0;
-    return Math.max(MAX_PER_SLOT - used, 0);
-  };
-
-  const suggestNextAvailableSlot = () => {
-    for (const slot of timeSlots) {
-      if (!isSlotFull(slot)) return slot;
-    }
-    return null;
-  };
+  const isSlotFull = (slot) => (slotCounts[slot] || 0) >= MAX_PER_SLOT;
+  const spotsLeft = (slot) => Math.max(MAX_PER_SLOT - (slotCounts[slot] || 0), 0);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    let updated = { ...formData, [name]: value };
+    const { name, value, type, checked } = e.target;
 
+    let updated = {
+      ...formData,
+      [name]: type === "checkbox" ? checked : value
+    };
+
+    // Subscription-aware pricing
     if (name === "bags") {
       const bagsNum = parseInt(value) || 0;
       const lbsPerBag = 15;
-      const basePrice = 24;
-      const extraRate = 1.60;
       const totalLbs = bagsNum * lbsPerBag;
 
-      let estimate = basePrice;
-      if (totalLbs > 15) {
-        estimate = basePrice + (totalLbs - 15) * extraRate;
+      let estimate = 24; // base price
+
+      if (subscription) {
+        const included = subscription.included_lbs;
+        const extraRate = subscription.extra_rate;
+
+        if (totalLbs > included) {
+          estimate = 24 + (totalLbs - included) * extraRate;
+        }
+      } else {
+        // Standard pricing
+        if (totalLbs > 15) {
+          estimate = 24 + (totalLbs - 15) * 1.60;
+        }
       }
 
       updated.estimate = Math.round(estimate * 100) / 100;
@@ -140,42 +155,35 @@ export default function ScheduleModal({ setShowModal, user }) {
     e.preventDefault();
 
     if (isSlotFull(selectedTime)) {
-      const nextSlot = suggestNextAvailableSlot();
-      if (nextSlot) {
-        alert(`That time slot just filled up. Next available: ${nextSlot}.`);
-      } else {
-        alert("All time slots for this day are full. Please choose another date.");
-      }
+      alert("That time slot is full. Please choose another.");
       return;
     }
 
-    const { error } = await supabase.functions.invoke("order-notify", {
-      body: {
-        user_id: user?.id ?? null,
-        full_name: formData.fullName,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email,
-        service: formData.service,
-        detergent: formData.detergent,
-        dryer_sheets: document.getElementById('dryerSheets').checked,
-        instructions: document.querySelector('textarea').value,
-        pickup_date: selectedDate?.toISOString().split('T')[0],
-        pickup_time: selectedTime,
-        notification_preference: formData.notificationPreference,
-        bags: formData.bags,
-        estimate: formData.estimate,
-        status: "pending"
-      }
+    const pickupDate = selectedDate.toISOString().split('T')[0];
+
+    const { error } = await supabase.from("orders").insert({
+      user_id: user.id,
+      customer_name: formData.fullName,
+      customer_email: formData.email,
+      customer_phone: formData.phone,
+      pickup_address: formData.address,
+      pickup_time: selectedTime,
+      pickup_date: pickupDate,
+      pounds: parseInt(formData.bags) * 15,
+      total_price: formData.estimate,
+      status: "scheduled",
+      notes: formData.instructions,
+      detergent: formData.detergent,
+      dryer_sheets: formData.dryerSheets
     });
 
     if (error) {
-      console.error("SUPABASE INSERT ERROR:", error);
-      alert("Something went wrong. Check the console.");
+      console.error("Order insert error:", error);
+      alert("Something went wrong. Try again.");
       return;
     }
 
-    alert('Pickup scheduled! You will receive a confirmation email or text.');
+    alert("Pickup scheduled! You will receive updates automatically.");
     setShowModal(false);
   };
 
@@ -196,50 +204,40 @@ export default function ScheduleModal({ setShowModal, user }) {
 
         <form onSubmit={handleSubmit} className="space-y-3 text-sm text-purple-900">
 
+          {/* Profile fields */}
           <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
           <input type="text" name="address" placeholder="Pickup Address" value={formData.address} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
           <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
           <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
 
-          <label className="block text-sm font-medium text-purple-700">
-            Please select which service you're requesting.
-          </label>
+          {/* Service */}
+          <label className="block text-sm font-medium text-purple-700">Service</label>
           <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Service</option>
             <option value="residential">Residential Wash & Fold</option>
             <option value="commercial">Commercial Laundry</option>
           </select>
 
-          <label className="block text-sm font-medium text-purple-700">
-            How many bags/loads?
-          </label>
-          <select
-            name="bags"
-            value={formData.bags}
-            onChange={handleChange}
-            className="w-full p-2 border border-purple-300 rounded"
-            required
-          >
+          {/* Bags */}
+          <label className="block text-sm font-medium text-purple-700">How many bags?</label>
+          <select name="bags" value={formData.bags} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select amount</option>
-
             {Array.from({ length: 24 }, (_, i) => {
               const bags = i + 1;
-              const lbsPerBag = 15;
-              const totalLbs = bags * lbsPerBag;
+              const lbs = bags * 15;
 
-              const basePrice = 24;
-              const extraRate = 1.60;
-
-              let estimate = basePrice;
-              if (totalLbs > 15) {
-                estimate = basePrice + (totalLbs - 15) * extraRate;
+              let estimate = 24;
+              if (subscription) {
+                if (lbs > subscription.included_lbs) {
+                  estimate = 24 + (lbs - subscription.included_lbs) * subscription.extra_rate;
+                }
+              } else {
+                if (lbs > 15) estimate = 24 + (lbs - 15) * 1.60;
               }
-
-              const rounded = Math.round(estimate * 100) / 100;
 
               return (
                 <option key={bags} value={bags}>
-                  {bags} Bags/Loads – {totalLbs} lbs = ${rounded}
+                  {bags} Bags – {lbs} lbs = ${estimate.toFixed(2)}
                 </option>
               );
             })}
@@ -251,41 +249,32 @@ export default function ScheduleModal({ setShowModal, user }) {
             </p>
           )}
 
-          <label className="block text-sm font-medium text-purple-700">
-            Which detergent would you like us to use?
-          </label>
+          {/* Detergent */}
+          <label className="block text-sm font-medium text-purple-700">Detergent</label>
           <select name="detergent" value={formData.detergent} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select Detergent</option>
             <option value="gain">Gain</option>
-            <option value="arm-hammer">All *Free & Clear*</option>
+            <option value="arm-hammer">All Free & Clear</option>
             <option value="tide">Tide</option>
           </select>
 
+          {/* Dryer sheets */}
           <div className="flex items-center gap-2">
-            <input type="checkbox" id="dryerSheets" className="h-4 w-4 text-purple-600" />
-            <label htmlFor="dryerSheets" className="text-sm text-purple-700">
-              Add dryer sheets
-            </label>
+            <input type="checkbox" name="dryerSheets" checked={formData.dryerSheets} onChange={handleChange} className="h-4 w-4 text-purple-600" />
+            <label className="text-sm text-purple-700">Add dryer sheets</label>
           </div>
 
-          <label className="block text-sm font-medium text-purple-700">
-            Select a pickup date
-          </label>
-          <DayPicker
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            disabled={{ before: tomorrow }}
-          />
+          {/* Date */}
+          <label className="block text-sm font-medium text-purple-700">Pickup Date</label>
+          <DayPicker mode="single" selected={selectedDate} onSelect={setSelectedDate} disabled={{ before: tomorrow }} />
 
-          <label className="block text-sm font-medium text-purple-700">
-            Select a pickup time
-          </label>
-
+          {/* Time */}
+          <label className="block text-sm font-medium text-purple-700">Pickup Time</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {timeSlots.map((slot) => {
               const full = isSlotFull(slot);
               const left = spotsLeft(slot);
+
               return (
                 <button
                   type="button"
@@ -309,28 +298,23 @@ export default function ScheduleModal({ setShowModal, user }) {
             })}
           </div>
 
-          <label className="block text-sm font-medium text-purple-700">
-            How would you like to be notified?
-          </label>
-          <select
-            name="notificationPreference"
-            value={formData.notificationPreference}
-            onChange={handleChange}
-            className="w-full p-2 border border-purple-300 rounded"
-            required
-          >
+          {/* Notification preference */}
+          <label className="block text-sm font-medium text-purple-700">Notification Preference</label>
+          <select name="notificationPreference" value={formData.notificationPreference} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select preference</option>
             <option value="email">Email</option>
             <option value="text">Text Message</option>
           </select>
 
-          <label className="block text-sm font-medium text-purple-700">
-            Special instructions
-          </label>
+          {/* Instructions */}
+          <label className="block text-sm font-medium text-purple-700">Special Instructions</label>
           <textarea
+            name="instructions"
+            value={formData.instructions}
+            onChange={handleChange}
             className="w-full p-2 border border-purple-300 rounded"
             placeholder="Any special notes for your driver?"
-          ></textarea>
+          />
 
           <button
             type="submit"
