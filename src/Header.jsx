@@ -71,12 +71,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   }
 
   const handleScheduleClick = () => {
-    if (!user) {
-      openAuth('signin');
-      return;
-    }
-    setShowModal(true);
-  };
+  setShowModal(true);
+};
 
   return (
     <header className="sticky top-0 z-[1000] bg-gray-50 shadow-md">
