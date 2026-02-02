@@ -25,7 +25,7 @@ export default function ScheduleModal({ setShowModal, user }) {
   const [formComplete, setFormComplete] = useState(false);
 
   const [slotCounts, setSlotCounts] = useState({});
-  const MAX_PER_SLOT = 3;
+  const MAX_PER_SLOT = 5;
 
   const timeSlots = [
     '8:00 AM - 10:00 AM',
@@ -152,40 +152,50 @@ export default function ScheduleModal({ setShowModal, user }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (isSlotFull(selectedTime)) {
-      alert("That time slot is full. Please choose another.");
-      return;
+  if (isSlotFull(selectedTime)) {
+    alert("That time slot is full. Please choose another.");
+    return;
+  }
+
+  const pickupDate = selectedDate.toISOString().split("T")[0];
+
+  const response = await fetch(
+    "https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/order-notify",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user?.id || null,
+        full_name: formData.fullName,
+        address: formData.address,
+        phone: formData.phone,
+        email: formData.email,
+        pickup_date: pickupDate,
+        pickup_time: selectedTime,
+        notification_preference: formData.notificationPreference,
+        detergent: formData.detergent,
+        dryer_sheets: formData.dryerSheets,
+        instructions: formData.instructions,
+        service: formData.service,
+        bags: formData.bags,
+        estimate: formData.estimate
+      })
     }
+  );
 
-    const pickupDate = selectedDate.toISOString().split('T')[0];
+  const result = await response.json();
 
-    const { error } = await supabase.from("orders").insert({
-      user_id: user.id,
-      customer_name: formData.fullName,
-      customer_email: formData.email,
-      customer_phone: formData.phone,
-      pickup_address: formData.address,
-      pickup_time: selectedTime,
-      pickup_date: pickupDate,
-      pounds: parseInt(formData.bags) * 15,
-      total_price: formData.estimate,
-      status: "scheduled",
-      notes: formData.instructions,
-      detergent: formData.detergent,
-      dryer_sheets: formData.dryerSheets
-    });
+  if (!response.ok) {
+    console.error("Function error:", result);
+    alert("Something went wrong. Try again.");
+    return;
+  }
 
-    if (error) {
-      console.error("Order insert error:", error);
-      alert("Something went wrong. Try again.");
-      return;
-    }
-
-    alert("Pickup scheduled! You will receive updates automatically.");
-    setShowModal(false);
-  };
+  alert("Pickup scheduled! You will receive updates automatically.");
+  setShowModal(false);
+};
 
   return (
     <div className="fixed inset-0 flex justify-center items-center z-[3000] px-2 sm:px-4">
