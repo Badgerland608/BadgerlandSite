@@ -144,11 +144,22 @@ export default function ScheduleModal({ setShowModal, user }) {
 
     setFormData(updated);
 
-    const isComplete = Object.values(updated)
-      .filter((v) => typeof v === "string")
-      .every((val) => val.trim() !== '');
+    const requiredFields = [
+  "fullName",
+  "address",
+  "phone",
+  "email",
+  "service",
+  "detergent",
+  "notificationPreference",
+  "bags"
+];
 
-    setFormComplete(isComplete);
+const isComplete = requiredFields.every(
+  (field) => updated[field] && updated[field].toString().trim() !== ""
+);
+
+setFormComplete(isComplete);
   };
 
   const handleSubmit = async (e) => {
@@ -291,7 +302,7 @@ export default function ScheduleModal({ setShowModal, user }) {
                   key={slot}
                   disabled={full}
                   onClick={() => !full && setSelectedTime(slot)}
-                  className={`p-2 rounded border flex flex-col items-start ${
+                  className={`p-2 rounded border flex flex-col items-center text-center ${
                     full
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : selectedTime === slot
