@@ -301,7 +301,7 @@ export default function ScheduleModal({ setShowModal, user }) {
                 >
                   <span>{slot}</span>
                   <span className="text-xs mt-1">
-                    {full ? 'Full':}
+                    {full ? 'Full': ''}
                   </span>
                 </button>
               );
