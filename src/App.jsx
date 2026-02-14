@@ -155,6 +155,7 @@ function App() {
         />
 
         <Routes>
+
           {/* Home Page */}
           <Route
             path="/"
@@ -175,6 +176,23 @@ function App() {
                 <Intro />
                 <HowItWorks />
                 <Rates />
+
+                {/* ⭐ NEW: Homepage Subscription CTA */}
+                <div className="text-center my-10 px-4">
+                  <h2 className="text-2xl font-bold text-purple-800 mb-2">
+                    Want to save money on every pickup?
+                  </h2>
+                  <p className="text-purple-700 mb-4">
+                    Become a member and enjoy included pounds, discounted rates, and priority service.
+                  </p>
+                  <a
+                    href="/plans"
+                    className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold shadow hover:bg-purple-600 transition"
+                  >
+                    View Subscription Plans
+                  </a>
+                </div>
+
                 <ServiceArea />
                 <WhyChooseUs />
                 <FAQ />
@@ -191,6 +209,7 @@ function App() {
             path="/my-account"
             element={<MyAccount user={user} setShowAccount={setShowAccount} />}
           />
+
         </Routes>
 
         <div className="bg-slate-900 text-white text-center py-4">
