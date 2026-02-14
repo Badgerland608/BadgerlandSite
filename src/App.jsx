@@ -15,7 +15,12 @@ import FinalCTA from './FinalCTA';
 import ScheduleModal from './ScheduleModal';
 import MyAccount from './MyAccount';
 import AdminDashboard from './AdminDashboard';
-import Plans from "./Plans"; // ⭐ NEW
+import Plans from "./Plans";
+
+// ⭐ NEW IMPORTS
+import About from "./About";
+import Residential from "./Residential";
+import Commercial from "./Commercial";
 
 import { supabase } from './lib/supabaseClient';
 
@@ -177,7 +182,7 @@ function App() {
                 <HowItWorks />
                 <Rates />
 
-                {/* ⭐ NEW: Homepage Subscription CTA */}
+                {/* ⭐ Homepage Subscription CTA */}
                 <div className="text-center my-10 px-4">
                   <h2 className="text-2xl font-bold text-purple-800 mb-2">
                     Want to save money on every pickup?
@@ -201,10 +206,15 @@ function App() {
             }
           />
 
-          {/* ⭐ NEW: Subscription Plans Page */}
+          {/* ⭐ NEW ROUTES */}
+          <Route path="/About" element={<About />} />
+          <Route path="/Residential" element={<Residential />} />
+          <Route path="/Commercial" element={<Commercial />} />
+
+          {/* Subscription Plans */}
           <Route path="/plans" element={<Plans />} />
 
-          {/* My Account Page */}
+          {/* My Account */}
           <Route
             path="/my-account"
             element={<MyAccount user={user} setShowAccount={setShowAccount} />}
