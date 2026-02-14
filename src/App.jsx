@@ -212,8 +212,8 @@ function App() {
 
         </Routes>
 
-        <div className="bg-slate-900 text-white text-center py-4">
-          <h2>Badgerland Laundry</h2>
+        <div className="bg-purple-900 text-white text-center py-3">
+          <h2>Badgerland Laundry LLC</h2>
         </div>
 
         {showModal && (
