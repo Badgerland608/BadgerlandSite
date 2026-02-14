@@ -71,8 +71,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   }
 
   const handleScheduleClick = () => {
-  setShowModal(true);
-};
+    setShowModal(true);
+  };
 
   return (
     <header className="sticky top-0 z-[1000] bg-gray-50 shadow-md">
@@ -129,7 +129,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
           {userMenuOpen && (
             <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-56 z-[1001]">
-
               {!user ? (
                 <>
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>Sign In</button>
@@ -154,9 +153,16 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                   <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={handleLogout}>Log Out</button>
                 </>
               )}
-
             </div>
           )}
+
+          {/* ⭐ Become a Member Button (Desktop) */}
+          <a
+            href="/plans"
+            className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold border border-purple-300 hover:bg-purple-200 transition whitespace-nowrap"
+          >
+            Become a Member
+          </a>
 
           <button
             onClick={handleScheduleClick}
@@ -178,7 +184,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[500] flex justify-end">
-
           <div
             className="flex-1 bg-black bg-opacity-40"
             onClick={() => setMobileMenuOpen(false)}
@@ -233,6 +238,14 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                 <button className="text-left text-purple-700" onClick={handleLogout}>Log Out</button>
               </>
             )}
+
+            {/* ⭐ Become a Member Button (Mobile) */}
+            <a
+              href="/plans"
+              className="text-left text-purple-700 font-semibold"
+            >
+              Become a Member
+            </a>
 
             <button
               onClick={() => {

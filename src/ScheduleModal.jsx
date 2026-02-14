@@ -107,7 +107,6 @@ export default function ScheduleModal({ setShowModal, user }) {
   }, [selectedDate]);
 
   const isSlotFull = (slot) => (slotCounts[slot] || 0) >= MAX_PER_SLOT;
-  const spotsLeft = (slot) => Math.max(MAX_PER_SLOT - (slotCounts[slot] || 0), 0);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -133,7 +132,6 @@ export default function ScheduleModal({ setShowModal, user }) {
           estimate = 24 + (totalLbs - included) * extraRate;
         }
       } else {
-        // Standard pricing
         if (totalLbs > 15) {
           estimate = 24 + (totalLbs - 15) * 1.60;
         }
@@ -144,69 +142,63 @@ export default function ScheduleModal({ setShowModal, user }) {
 
     setFormData(updated);
 
-    const requiredFields = [
-  "fullName",
-  "address",
-  "phone",
-  "email",
-  "service",
-  "detergent",
-  "notificationPreference",
-  "bags"
-];
+    // Required fields change depending on subscription
+    const requiredFields = subscription
+      ? ["fullName", "address", "phone", "email", "detergent", "notificationPreference", "bags"]
+      : ["fullName", "address", "phone", "email", "service", "detergent", "notificationPreference", "bags"];
 
-const isComplete = requiredFields.every(
-  (field) => updated[field] && updated[field].toString().trim() !== ""
-);
+    const isComplete = requiredFields.every(
+      (field) => updated[field] && updated[field].toString().trim() !== ""
+    );
 
-setFormComplete(isComplete);
+    setFormComplete(isComplete);
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (isSlotFull(selectedTime)) {
-    alert("That time slot is full. Please choose another.");
-    return;
-  }
-
-  const pickupDate = selectedDate.toISOString().split("T")[0];
-
-  const response = await fetch(
-    "https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/order-notify",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user?.id || null,
-        full_name: formData.fullName,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email,
-        pickup_date: pickupDate,
-        pickup_time: selectedTime,
-        notification_preference: formData.notificationPreference,
-        detergent: formData.detergent,
-        dryer_sheets: formData.dryerSheets,
-        instructions: formData.instructions,
-        service: formData.service,
-        bags: formData.bags,
-        estimate: formData.estimate
-      })
+    if (isSlotFull(selectedTime)) {
+      alert("That time slot is full. Please choose another.");
+      return;
     }
-  );
 
-  const result = await response.json();
+    const pickupDate = selectedDate.toISOString().split("T")[0];
 
-  if (!response.ok) {
-    console.error("Function error:", result);
-    alert("Something went wrong. Try again.");
-    return;
-  }
+    const response = await fetch(
+      "https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/order-notify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user?.id || null,
+          full_name: formData.fullName,
+          address: formData.address,
+          phone: formData.phone,
+          email: formData.email,
+          pickup_date: pickupDate,
+          pickup_time: selectedTime,
+          notification_preference: formData.notificationPreference,
+          detergent: formData.detergent,
+          dryer_sheets: formData.dryerSheets,
+          instructions: formData.instructions,
+          service: subscription ? "subscriber" : formData.service,
+          bags: formData.bags,
+          estimate: formData.estimate
+        })
+      }
+    );
 
-  alert("Pickup scheduled! You will receive updates automatically.");
-  setShowModal(false);
-};
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Function error:", result);
+      alert("Something went wrong. Try again.");
+      return;
+    }
+
+    alert("Pickup scheduled! You will receive updates automatically.");
+    setShowModal(false);
+  };
 
   return (
     <div className="fixed inset-0 flex justify-center items-center z-[3000] px-2 sm:px-4">
@@ -223,6 +215,16 @@ setFormComplete(isComplete);
           Schedule a Pickup
         </h2>
 
+        {/* ⭐ Non-subscriber banner */}
+        {!subscription && (
+          <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-sm mb-4 text-center">
+            You are not a subscriber.  
+            <a href="/plans" className="underline text-purple-700 font-semibold ml-1">
+              View subscription plans
+            </a>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-3 text-sm text-purple-900">
 
           {/* Profile fields */}
@@ -231,18 +233,23 @@ setFormComplete(isComplete);
           <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
           <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
 
-          {/* Service */}
-          <label className="block text-sm font-medium text-purple-700">Service</label>
-          <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
-            <option value="">Select Service</option>
-            <option value="residential">Residential Wash & Fold</option>
-            <option value="commercial">Commercial Laundry</option>
-          </select>
+          {/* ⭐ Hide service selection for subscribers */}
+          {!subscription && (
+            <>
+              <label className="block text-sm font-medium text-purple-700">Service</label>
+              <select name="service" value={formData.service} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
+                <option value="">Select Service</option>
+                <option value="residential">Residential Wash & Fold</option>
+                <option value="commercial">Commercial Laundry</option>
+              </select>
+            </>
+          )}
 
           {/* Bags */}
           <label className="block text-sm font-medium text-purple-700">How many bags?</label>
           <select name="bags" value={formData.bags} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required>
             <option value="">Select amount</option>
+
             {Array.from({ length: 24 }, (_, i) => {
               const bags = i + 1;
               const lbs = bags * 15;
@@ -294,7 +301,6 @@ setFormComplete(isComplete);
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {timeSlots.map((slot) => {
               const full = isSlotFull(slot);
-              const left = spotsLeft(slot);
 
               return (
                 <button
@@ -311,9 +317,7 @@ setFormComplete(isComplete);
                   }`}
                 >
                   <span>{slot}</span>
-                  <span className="text-xs mt-1">
-                    {full ? 'Full': ''}
-                  </span>
+                  <span className="text-xs mt-1">{full ? 'Full' : ''}</span>
                 </button>
               );
             })}

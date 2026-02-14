@@ -1,6 +1,7 @@
 // cloudflare rebuild 4
 
 import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Header from './Header';
 import Hero from './Hero';
@@ -14,6 +15,7 @@ import FinalCTA from './FinalCTA';
 import ScheduleModal from './ScheduleModal';
 import MyAccount from './MyAccount';
 import AdminDashboard from './AdminDashboard';
+import Plans from "./Plans"; // ⭐ NEW
 
 import { supabase } from './lib/supabaseClient';
 
@@ -44,7 +46,7 @@ function App() {
             .from('profiles')
             .select('is_admin')
             .eq('id', authUser.id)
-            .maybeSingle(); // SAFE
+            .maybeSingle();
 
           if (error && error.code !== "PGRST116") {
             throw error;
@@ -74,7 +76,7 @@ function App() {
             .from('profiles')
             .select('is_admin')
             .eq('id', authUser.id)
-            .maybeSingle(); // SAFE
+            .maybeSingle();
 
           setIsAdmin(profile?.is_admin === true);
         } else {
@@ -140,49 +142,66 @@ function App() {
     );
   }
 
-  // Normal site view
+  // Normal site view with routing
   return (
-    <div className="relative z-0">
-      <Header
-        setShowModal={setShowModal}
-        user={user}
-        setShowAccount={setShowAccount}
-        isAdmin={isAdmin}
-        setShowAdmin={setShowAdmin}
-      />
+    <Router>
+      <div className="relative z-0">
+        <Header
+          setShowModal={setShowModal}
+          user={user}
+          setShowAccount={setShowAccount}
+          isAdmin={isAdmin}
+          setShowAdmin={setShowAdmin}
+        />
 
-      {user && isAdmin && (
-        <div className="p-4">
-          <button
-            onClick={() => setShowAdmin(true)}
-            className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
-          >
-            Open Admin Dashboard
-          </button>
+        <Routes>
+          {/* Home Page */}
+          <Route
+            path="/"
+            element={
+              <>
+                {user && isAdmin && (
+                  <div className="p-4">
+                    <button
+                      onClick={() => setShowAdmin(true)}
+                      className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
+                    >
+                      Open Admin Dashboard
+                    </button>
+                  </div>
+                )}
+
+                <Hero />
+                <Intro />
+                <HowItWorks />
+                <Rates />
+                <ServiceArea />
+                <WhyChooseUs />
+                <FAQ />
+                <FinalCTA />
+              </>
+            }
+          />
+
+          {/* ⭐ NEW: Subscription Plans Page */}
+          <Route path="/plans" element={<Plans />} />
+
+          {/* My Account Page */}
+          <Route
+            path="/my-account"
+            element={<MyAccount user={user} setShowAccount={setShowAccount} />}
+          />
+        </Routes>
+
+        <div className="bg-slate-900 text-white text-center py-4">
+          <h2>Badgerland Laundry</h2>
         </div>
-      )}
 
-      <Hero />
-      <Intro />
-      <HowItWorks />
-      <Rates />
-      <ServiceArea />
-      <WhyChooseUs />
-      <FAQ />
-      <FinalCTA />
-
-      <div className="bg-slate-900 text-white text-center py-4">
-        <h2>Badgerland Laundry</h2>
+        {showModal && (
+          <ScheduleModal setShowModal={setShowModal} user={user} />
+        )}
       </div>
-
-      {showModal && (
-        <ScheduleModal setShowModal={setShowModal} user={user} />
-      )}
-
-      {showAccount && user && (
-        <MyAccount user={user} setShowAccount={setShowAccount} />
-      )}
-    </div>
+    </Router>
   );
 }
 
