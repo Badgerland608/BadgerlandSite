@@ -245,14 +245,14 @@ export default function MyAccount({ user, setShowAccount }) {
                 <h3 className="font-semibold text-purple-800 mb-2">Subscription</h3>
 
                 {!subscription ? (
-                  <p className="text-purple-700">No active subscription.</p>
+                  <p className="text-purple-700">
+                    No active subscription.
+                    <a href="/plans" className="underline text-purple-700 ml-1">
+                      View plans
+                    </a>
+                  </p>
                 ) : (
-                  <div className="border border-purple-200 rounded p-3 bg-purple-50">
-                    <p><strong>Plan:</strong> {subscription.plan_name}</p>
-                    <p><strong>Included lbs:</strong> {subscription.included_lbs}</p>
-                    <p><strong>Extra rate:</strong> ${subscription.extra_rate}/lb</p>
-                    <p><strong>Renews:</strong> {subscription.renewal_date}</p>
-                  </div>
+                  <SubscriptionDashboard user={user} subscription={subscription} orders={orders} />
                 )}
               </div>
             )}
@@ -291,5 +291,151 @@ export default function MyAccount({ user, setShowAccount }) {
         </button>
       </div>
     </div>
+  );
+}
+
+/* -----------------------------
+   SUBSCRIPTION DASHBOARD COMPONENT
+------------------------------ */
+
+function SubscriptionDashboard({ user, subscription, orders }) {
+  const [usage, setUsage] = useState({
+    used: 0,
+    remaining: subscription.included_lbs,
+    savings: 0
+  });
+
+  useEffect(() => {
+    const loadUsage = async () => {
+      const start = new Date();
+      start.setDate(1);
+      const startStr = start.toISOString().split("T")[0];
+
+      const { data: monthOrders } = await supabase
+        .from("orders")
+        .select("pounds, total_price")
+        .eq("user_id", user.id)
+        .gte("created_at", startStr);
+
+      if (!monthOrders) return;
+
+      const used = monthOrders.reduce((sum, o) => sum + (o.pounds || 0), 0);
+      const remaining = Math.max(subscription.included_lbs - used, 0);
+
+      const payAsYouGoCost = used * 1.60;
+      const subscriberCost =
+        used <= subscription.included_lbs
+          ? 0
+          : (used - subscription.included_lbs) * subscription.extra_rate;
+
+      const savings = Math.max(payAsYouGoCost - subscriberCost, 0);
+
+      setUsage({
+        used,
+        remaining,
+        savings: Math.round(savings * 100) / 100
+      });
+    };
+
+    loadUsage();
+  }, [user.id, subscription]);
+
+  const renewalDate = new Date(subscription.renewal_date);
+  const today = new Date();
+  const daysLeft = Math.max(
+    Math.ceil((renewalDate - today) / (1000 * 60 * 60 * 24)),
+    0
+  );
+
+  return (
+    <div className="border border-purple-200 rounded p-3 bg-purple-50 space-y-4">
+
+      {/* PLAN INFO */}
+      <div>
+        <p><strong>Plan:</strong> {subscription.plan_name}</p>
+        <p><strong>Included lbs:</strong> {subscription.included_lbs}</p>
+        <p><strong>Extra rate:</strong> ${subscription.extra_rate}/lb</p>
+        <p><strong>Renews:</strong> {subscription.renewal_date}</p>
+        <p><strong>Days until renewal:</strong> {daysLeft}</p>
+      </div>
+
+      {/* SAVINGS */}
+      <div className="bg-green-100 border border-green-300 p-3 rounded">
+        <p className="text-green-800 font-semibold">
+          Estimated savings this month: ${usage.savings}
+        </p>
+      </div>
+
+      {/* MONTHLY USAGE GRAPH */}
+      <div>
+        <h4 className="font-semibold text-purple-800 mb-1">Monthly Usage</h4>
+        <UsageBar used={usage.used} included={subscription.included_lbs} />
+      </div>
+
+      {/* ORDER-BY-ORDER CHART */}
+      <div>
+        <h4 className="font-semibold text-purple-800 mb-1">Usage Per Order</h4>
+        <OrderChart orders={orders} />
+      </div>
+
+      {/* BILLING PORTAL */}
+      <a
+        href="https://billing.stripe.com/p/login"
+        className="block text-center bg-purple-700 text-white py-2 rounded font-semibold hover:bg-purple-800 transition"
+      >
+        Manage Billing
+      </a>
+    </div>
+  );
+}
+
+/* -----------------------------
+   SVG USAGE BAR
+------------------------------ */
+
+function UsageBar({ used, included }) {
+  const percent = Math.min((used / included) * 100, 100);
+
+  return (
+    <div className="w-full bg-purple-200 rounded h-4 relative">
+      <div
+        className="bg-purple-700 h-4 rounded"
+        style={{ width: `${percent}%` }}
+      ></div>
+      <span className="absolute inset-0 flex justify-center items-center text-xs text-white font-semibold">
+        {used} lbs / {included} lbs
+      </span>
+    </div>
+  );
+}
+
+/* -----------------------------
+   SVG ORDER-BY-ORDER BAR CHART
+------------------------------ */
+
+function OrderChart({ orders }) {
+  if (!orders || orders.length === 0)
+    return <p className="text-purple-700 text-sm">No orders yet.</p>;
+
+  const max = Math.max(...orders.map((o) => o.pounds || 0), 1);
+
+  return (
+    <svg width="100%" height="120">
+      {orders.slice(0, 6).map((order, i) => {
+        const height = ((order.pounds || 0) / max) * 100;
+
+        return (
+          <rect
+            key={order.id}
+            x={i * 40 + 10}
+            y={110 - height}
+            width="30"
+            height={height}
+            fill="#6b21a8"
+            rx="4"
+          />
+        );
+      })}
+    </svg>
   );
 }
