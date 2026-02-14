@@ -13,5 +13,3 @@ export default function Commercial() {
     </div>
   );
 }
-
-export default Commercial;

@@ -13,5 +13,3 @@ export default function Residential() {
     </div>
   );
 }
-
-export default Residential;
