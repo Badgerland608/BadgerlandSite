@@ -211,7 +211,7 @@ function App() {
           <Route path="/Commercial" element={<Commercial />} />
 
           {/* Subscription Plans */}
-          <Route path="/plans" element={<Plans />} />
+          <Route path="/plans" element={<Plans user={user} />} />
 
           {/* My Account PAGE (not modal) */}
           <Route
