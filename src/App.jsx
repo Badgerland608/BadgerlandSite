@@ -25,9 +25,13 @@ import Commercial from "./Commercial";
 import { supabase } from './lib/supabaseClient';
 
 function App() {
+  const location = useLocation();
   const [showModal, setShowModal] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
+  useEffect(() => {
+  setShowAccount(false);
+}, [location.pathname]);
 
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
