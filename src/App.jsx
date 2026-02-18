@@ -1,7 +1,7 @@
-// cloudflare rebuild 4
+// cloudflare rebuild 5
 
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Header from './Header';
 import Hero from './Hero';
@@ -17,20 +17,14 @@ import MyAccount from './MyAccount';
 import AdminDashboard from './AdminDashboard';
 import Plans from "./Plans";
 
-// ⭐ NEW IMPORTS
 import About from "./About";
 import Residential from "./Residential";
 import Commercial from "./Commercial";
 
 import { supabase } from './lib/supabaseClient';
 
-
-// ---------------------------------------------------------
-// OUTER APP — handles Supabase auth + wraps Router
-// ---------------------------------------------------------
 function App() {
   const [showModal, setShowModal] = useState(false);
-  const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
   const [user, setUser] = useState(null);
@@ -92,7 +86,6 @@ function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Loading state
   if (loadingUser) {
     return (
       <div className="p-10 text-center text-gray-600">
@@ -101,7 +94,6 @@ function App() {
     );
   }
 
-  // Error state
   if (profileError) {
     return (
       <div className="p-10 text-center text-red-600">
@@ -109,43 +101,6 @@ function App() {
       </div>
     );
   }
-
-  return (
-    <Router>
-      <InnerApp
-        showModal={showModal}
-        setShowModal={setShowModal}
-        showAccount={showAccount}
-        setShowAccount={setShowAccount}
-        showAdmin={showAdmin}
-        setShowAdmin={setShowAdmin}
-        user={user}
-        isAdmin={isAdmin}
-      />
-    </Router>
-  );
-}
-
-
-// ---------------------------------------------------------
-// INNER APP — safe place to use useLocation()
-// ---------------------------------------------------------
-function InnerApp({
-  showModal,
-  setShowModal,
-  showAccount,
-  setShowAccount,
-  showAdmin,
-  setShowAdmin,
-  user,
-  isAdmin
-}) {
-  const location = useLocation();
-
-  // ⭐ Close MyAccount modal on route change
-  useEffect(() => {
-    setShowAccount(false);
-  }, [location.pathname]);
 
   // Admin view
   if (showAdmin) {
@@ -162,7 +117,6 @@ function InnerApp({
         <Header
           setShowModal={setShowModal}
           user={user}
-          setShowAccount={setShowAccount}
           isAdmin={isAdmin}
           setShowAdmin={setShowAdmin}
         />
@@ -181,93 +135,81 @@ function InnerApp({
     );
   }
 
-  // Normal site view
   return (
-    <div className="relative z-0">
-      <Header
-        setShowModal={setShowModal}
-        user={user}
-        setShowAccount={setShowAccount}
-        isAdmin={isAdmin}
-        setShowAdmin={setShowAdmin}
-      />
+    <Router>
+      <div className="relative z-0">
+        <Header
+          setShowModal={setShowModal}
+          user={user}
+          isAdmin={isAdmin}
+          setShowAdmin={setShowAdmin}
+        />
 
-      <Routes>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                {user && isAdmin && (
+                  <div className="p-4">
+                    <button
+                      onClick={() => setShowAdmin(true)}
+                      className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
+                    >
+                      Open Admin Dashboard
+                    </button>
+                  </div>
+                )}
 
-        {/* Home Page */}
-        <Route
-          path="/"
-          element={
-            <>
-              {user && isAdmin && (
-                <div className="p-4">
-                  <button
-                    onClick={() => setShowAdmin(true)}
-                    className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
+                <Hero />
+                <Intro />
+                <HowItWorks />
+                <Rates />
+
+                <div className="text-center my-10 px-4">
+                  <h2 className="text-2xl font-bold text-purple-800 mb-2">
+                    Want to save money on every pickup?
+                  </h2>
+                  <p className="text-purple-700 mb-4">
+                    Become a member and enjoy included pounds, discounted rates, and priority service.
+                  </p>
+                  <a
+                    href="/plans"
+                    className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold shadow hover:bg-purple-600 transition"
                   >
-                    Open Admin Dashboard
-                  </button>
+                    View Subscription Plans
+                  </a>
                 </div>
-              )}
 
-              <Hero />
-              <Intro />
-              <HowItWorks />
-              <Rates />
+                <ServiceArea />
+                <WhyChooseUs />
+                <FAQ />
+                <FinalCTA />
+              </>
+            }
+          />
 
-              {/* ⭐ Homepage Subscription CTA */}
-              <div className="text-center my-10 px-4">
-                <h2 className="text-2xl font-bold text-purple-800 mb-2">
-                  Want to save money on every pickup?
-                </h2>
-                <p className="text-purple-700 mb-4">
-                  Become a member and enjoy included pounds, discounted rates, and priority service.
-                </p>
-                <a
-                  href="/plans"
-                  className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold shadow hover:bg-purple-600 transition"
-                >
-                  View Subscription Plans
-                </a>
-              </div>
+          <Route path="/About" element={<About />} />
+          <Route path="/Residential" element={<Residential />} />
+          <Route path="/Commercial" element={<Commercial />} />
 
-              <ServiceArea />
-              <WhyChooseUs />
-              <FAQ />
-              <FinalCTA />
-            </>
-          }
-        />
+          <Route path="/plans" element={<Plans user={user} />} />
 
-        {/* ⭐ NEW ROUTES */}
-        <Route path="/About" element={<About />} />
-        <Route path="/Residential" element={<Residential />} />
-        <Route path="/Commercial" element={<Commercial />} />
+          <Route
+            path="/my-account"
+            element={<MyAccount user={user} />}
+          />
+        </Routes>
 
-        {/* Subscription Plans */}
-        <Route path="/plans" element={<Plans user={user} />} />
+        <div className="bg-purple-900 text-white text-center py-3">
+          <h2>Badgerland Laundry LLC</h2>
+        </div>
 
-        {/* My Account PAGE */}
-        <Route
-          path="/my-account"
-          element={<MyAccount user={user} setShowAccount={setShowAccount} />}
-        />
-      </Routes>
-
-      <div className="bg-purple-900 text-white text-center py-3">
-        <h2>Badgerland Laundry LLC</h2>
+        {showModal && (
+          <ScheduleModal setShowModal={setShowModal} user={user} />
+        )}
       </div>
-
-      {/* Schedule Pickup Modal */}
-      {showModal && (
-        <ScheduleModal setShowModal={setShowModal} user={user} />
-      )}
-
-      {/* My Account Modal */}
-      {showAccount && (
-        <MyAccount user={user} setShowAccount={setShowAccount} />
-      )}
-    </div>
+    </Router>
   );
 }
 
