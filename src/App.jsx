@@ -160,7 +160,6 @@ function App() {
         />
 
         <Routes>
-
           {/* Home Page */}
           <Route
             path="/"
@@ -214,20 +213,25 @@ function App() {
           {/* Subscription Plans */}
           <Route path="/plans" element={<Plans />} />
 
-          {/* My Account */}
+          {/* My Account PAGE (not modal) */}
           <Route
             path="/my-account"
             element={<MyAccount user={user} setShowAccount={setShowAccount} />}
           />
-
         </Routes>
 
         <div className="bg-purple-900 text-white text-center py-3">
           <h2>Badgerland Laundry LLC</h2>
         </div>
 
+        {/* Schedule Pickup Modal */}
         {showModal && (
           <ScheduleModal setShowModal={setShowModal} user={user} />
+        )}
+
+        {/* My Account MODAL — THIS WAS MISSING */}
+        {showAccount && (
+          <MyAccount user={user} setShowAccount={setShowAccount} />
         )}
       </div>
     </Router>
