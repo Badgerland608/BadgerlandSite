@@ -1,4 +1,4 @@
-// cloudflare rebuild 5
+// cloudflare rebuild 4
 
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
@@ -17,6 +17,7 @@ import MyAccount from './MyAccount';
 import AdminDashboard from './AdminDashboard';
 import Plans from "./Plans";
 
+// ⭐ NEW IMPORTS
 import About from "./About";
 import Residential from "./Residential";
 import Commercial from "./Commercial";
@@ -25,6 +26,7 @@ import { supabase } from './lib/supabaseClient';
 
 function App() {
   const [showModal, setShowModal] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
   const [user, setUser] = useState(null);
@@ -37,7 +39,10 @@ function App() {
   useEffect(() => {
     const loadUserAndProfile = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
         const authUser = session?.user ?? null;
         setUser(authUser);
 
@@ -48,7 +53,9 @@ function App() {
             .eq('id', authUser.id)
             .maybeSingle();
 
-          if (error && error.code !== "PGRST116") throw error;
+          if (error && error.code !== "PGRST116") {
+            throw error;
+          }
 
           setIsAdmin(profile?.is_admin === true);
         } else {
@@ -83,9 +90,12 @@ function App() {
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
+  // Loading state
   if (loadingUser) {
     return (
       <div className="p-10 text-center text-gray-600">
@@ -94,6 +104,7 @@ function App() {
     );
   }
 
+  // Error state
   if (profileError) {
     return (
       <div className="p-10 text-center text-red-600">
@@ -117,6 +128,7 @@ function App() {
         <Header
           setShowModal={setShowModal}
           user={user}
+          setShowAccount={setShowAccount}
           isAdmin={isAdmin}
           setShowAdmin={setShowAdmin}
         />
@@ -135,17 +147,20 @@ function App() {
     );
   }
 
+  // Normal site view with routing
   return (
     <Router>
       <div className="relative z-0">
         <Header
           setShowModal={setShowModal}
           user={user}
+          setShowAccount={setShowAccount}
           isAdmin={isAdmin}
           setShowAdmin={setShowAdmin}
         />
 
         <Routes>
+          {/* Home Page */}
           <Route
             path="/"
             element={
@@ -166,6 +181,7 @@ function App() {
                 <HowItWorks />
                 <Rates />
 
+                {/* ⭐ Homepage Subscription CTA */}
                 <div className="text-center my-10 px-4">
                   <h2 className="text-2xl font-bold text-purple-800 mb-2">
                     Want to save money on every pickup?
@@ -189,15 +205,18 @@ function App() {
             }
           />
 
+          {/* ⭐ NEW ROUTES */}
           <Route path="/About" element={<About />} />
           <Route path="/Residential" element={<Residential />} />
           <Route path="/Commercial" element={<Commercial />} />
 
+          {/* Subscription Plans */}
           <Route path="/plans" element={<Plans user={user} />} />
 
+          {/* My Account PAGE (not modal) */}
           <Route
             path="/my-account"
-            element={<MyAccount user={user} />}
+            element={<MyAccount user={user} setShowAccount={setShowAccount} />}
           />
         </Routes>
 
@@ -205,8 +224,14 @@ function App() {
           <h2>Badgerland Laundry LLC</h2>
         </div>
 
+        {/* Schedule Pickup Modal */}
         {showModal && (
           <ScheduleModal setShowModal={setShowModal} user={user} />
+        )}
+
+        {/* My Account MODAL — THIS WAS MISSING */}
+        {showAccount && (
+          <MyAccount user={user} setShowAccount={setShowAccount} />
         )}
       </div>
     </Router>
