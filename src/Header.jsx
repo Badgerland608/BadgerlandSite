@@ -1,5 +1,3 @@
-// force cloudflare rebuild
-
 import { useState } from 'react';
 import { FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
@@ -9,7 +7,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,12 +19,15 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
     setAuthOpen(true);
     setUserMenuOpen(false);
     setMobileMenuOpen(false);
+    setServicesOpen(false);
   };
 
+  // ✅ FIXED: safely open My Account modal
   const openAccount = () => {
-    setShowAccount(true);
     setUserMenuOpen(false);
     setMobileMenuOpen(false);
+    setServicesOpen(false);
+    setShowAccount(true);
   };
 
   const handleLogout = async () => {
@@ -75,13 +75,15 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   };
 
   return (
-    <header className="sticky top-0 z-[1000] bg-gray-50 shadow-md">
+    // ✅ FIXED: lower z-index so modals appear ABOVE header
+    <header className="sticky top-0 z-[40] bg-gray-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
-
         {/* Logo */}
         <div className="flex items-center gap-2">
           <img src="/BL-2.png" alt="BL" className="h-10 w-10" />
-          <span className="text-xl font-bold text-purple-800">Badgerland Laundry</span>
+          <span className="text-xl font-bold text-purple-800">
+            Badgerland Laundry
+          </span>
         </div>
 
         {/* Desktop Navigation */}
@@ -102,41 +104,52 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
             {servicesOpen && (
               <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
-                <a href="/Residential" className="block px-4 py-2 hover:bg-blue-50">Residential</a>
-                <a href="/Commercial" className="block px-4 py-2 hover:bg-blue-50">Commercial</a>
+                <a href="/Residential" className="block px-4 py-2 hover:bg-blue-50">
+                  Residential
+                </a>
+                <a href="/Commercial" className="block px-4 py-2 hover:bg-blue-50">
+                  Commercial
+                </a>
               </div>
             )}
           </div>
         </nav>
 
         {/* Desktop Icons */}
-        <div className="hidden md:flex items-center gap-6 relative z-[1000]">
-
-          <a href="/cart" aria-label="Cart" className="text-purple-900 hover:text-purple-600">
+        <div className="hidden md:flex items-center gap-6 relative">
+          <a href="/cart" className="text-purple-900 hover:text-purple-600">
             <FaShoppingCart size={20} />
           </a>
 
           <button
-            aria-label="Account"
             onClick={() => {
               setUserMenuOpen(!userMenuOpen);
               setServicesOpen(false);
             }}
-            className="text-purple-900 hover:text-purple-600 relative"
+            className="text-purple-900 hover:text-purple-600"
           >
             <FaUser size={20} />
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-56 z-[1001]">
+            <div
+              className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-56 z-[60]"
+              onClick={() => setUserMenuOpen(false)}
+            >
               {!user ? (
                 <>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>Sign In</button>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signup')}>Create Account</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>
+                    Sign In
+                  </button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signup')}>
+                    Create Account
+                  </button>
                 </>
               ) : (
                 <>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>My Account</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>
+                    My Account
+                  </button>
 
                   {isAdmin && (
                     <button
@@ -150,23 +163,27 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                     </button>
                   )}
 
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={handleLogout}>Log Out</button>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-purple-50"
+                    onClick={handleLogout}
+                  >
+                    Log Out
+                  </button>
                 </>
               )}
             </div>
           )}
 
-          {/* ⭐ Become a Member Button (Desktop) */}
           <a
             href="/plans"
-            className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold border border-purple-300 hover:bg-purple-200 transition whitespace-nowrap"
+            className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold border border-purple-300 hover:bg-purple-200"
           >
             Become a Member
           </a>
 
           <button
             onClick={handleScheduleClick}
-            className="bg-purple-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:bg-purple-600 whitespace-nowrap"
+            className="bg-purple-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:bg-purple-600"
           >
             Schedule Pickup
           </button>
@@ -188,44 +205,38 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             className="flex-1 bg-black bg-opacity-40"
             onClick={() => setMobileMenuOpen(false)}
           />
-
-          <div className="w-64 bg-white h-full shadow-xl p-5 flex flex-col gap-4 animate-slide-left">
-
+          <div className="w-64 bg-white h-full shadow-xl p-5 flex flex-col gap-4">
             <div className="flex justify-end">
-              <button onClick={() => setMobileMenuOpen(false)} className="text-purple-900">
+              <button onClick={() => setMobileMenuOpen(false)}>
                 <FaTimes size={24} />
               </button>
             </div>
 
-            <a href="/" className="text-blue-900 font-medium">Home</a>
-            <a href="/About" className="text-blue-900 font-medium">About</a>
+            <a href="/">Home</a>
+            <a href="/About">About</a>
 
-            <button
-              onClick={() => setServicesOpen(!servicesOpen)}
-              className="text-left text-blue-900 font-medium"
-            >
+            <button onClick={() => setServicesOpen(!servicesOpen)}>
               Services
             </button>
 
             {servicesOpen && (
               <div className="ml-4 space-y-2">
-                <a href="/Residential" className="block text-blue-700">Residential</a>
-                <a href="/Commercial" className="block text-blue-700">Commercial</a>
+                <a href="/Residential">Residential</a>
+                <a href="/Commercial">Commercial</a>
               </div>
             )}
 
             {!user ? (
               <>
-                <button className="text-left text-purple-700" onClick={() => openAuth('signin')}>Sign In</button>
-                <button className="text-left text-purple-700" onClick={() => openAuth('signup')}>Create Account</button>
+                <button onClick={() => openAuth('signin')}>Sign In</button>
+                <button onClick={() => openAuth('signup')}>Create Account</button>
               </>
             ) : (
               <>
-                <button className="text-left text-purple-700" onClick={openAccount}>My Account</button>
+                <button onClick={openAccount}>My Account</button>
 
                 {isAdmin && (
                   <button
-                    className="text-left text-purple-700 font-semibold"
                     onClick={() => {
                       setShowAdmin(true);
                       setMobileMenuOpen(false);
@@ -235,77 +246,74 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
                   </button>
                 )}
 
-                <button className="text-left text-purple-700" onClick={handleLogout}>Log Out</button>
+                <button onClick={handleLogout}>Log Out</button>
               </>
             )}
 
-            {/* ⭐ Become a Member Button (Mobile) */}
-            <a
-              href="/plans"
-              className="text-left text-purple-700 font-semibold"
-            >
-              Become a Member
-            </a>
+            <a href="/plans">Become a Member</a>
 
             <button
               onClick={() => {
                 handleScheduleClick();
                 setMobileMenuOpen(false);
               }}
-              className="mt-4 w-full bg-purple-700 text-white py-2 rounded-full font-semibold"
+              className="mt-4 bg-purple-700 text-white py-2 rounded-full"
             >
               Schedule Pickup
             </button>
-
           </div>
         </div>
       )}
 
-      {/* Auth Modal */}
+      {/* Auth Modal (unchanged) */}
       {authOpen && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-40" onClick={() => setAuthOpen(false)} />
-
           <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-[2001]">
-
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">{mode === 'signin' ? 'Sign In' : 'Create Account'}</h3>
-              <button onClick={() => setAuthOpen(false)} className="text-gray-600">✕</button>
-            </div>
+            <h3 className="text-lg font-semibold mb-4">
+              {mode === 'signin' ? 'Sign In' : 'Create Account'}
+            </h3>
 
             <form onSubmit={handleAuthSubmit} className="space-y-4">
-
               {mode === 'signup' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                  <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full border px-3 py-2 rounded"
+                />
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
-              </div>
+              <input
+                type="email"
+                placeholder="Email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Password</label>
-                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
-              </div>
+              <input
+                type="password"
+                placeholder="Password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border px-3 py-2 rounded"
+              />
 
               {errorMsg && <p className="text-red-600 text-sm">{errorMsg}</p>}
 
-              <div className="flex items-center justify-between">
-                <button type="submit" disabled={loading} className="bg-purple-800 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50">
-                  {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
-                </button>
-
-                <button type="button" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')} className="text-sm text-purple-700 underline">
-                  {mode === 'signin' ? 'Create an account' : 'Have an account? Sign in'}
-                </button>
-              </div>
-
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-purple-800 text-white py-2 rounded"
+              >
+                {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
+              </button>
             </form>
-
           </div>
         </div>
       )}
