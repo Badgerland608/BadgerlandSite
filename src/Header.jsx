@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
 
-function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
+function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,8 +24,10 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
     setMobileMenuOpen(false);
   };
 
-  const goToAccount = () => {
-    window.location.href = "/my-account";
+  const openAccount = () => {
+    setShowAccount(true);
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
   };
 
   const handleLogout = async () => {
@@ -33,6 +35,40 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
     setUserMenuOpen(false);
     setMobileMenuOpen(false);
   };
+
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullName } }
+        });
+        if (error) throw error;
+        alert('Account created! Check your email to confirm.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+        alert('Signed in successfully.');
+      }
+
+      setAuthOpen(false);
+      setEmail('');
+      setPassword('');
+      setFullName('');
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+
+    setLoading(false);
+  }
 
   const handleScheduleClick = () => {
     setShowModal(true);
@@ -100,7 +136,7 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
                 </>
               ) : (
                 <>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={goToAccount}>My Account</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>My Account</button>
 
                   {isAdmin && (
                     <button
@@ -120,6 +156,7 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
             </div>
           )}
 
+          {/* ⭐ Become a Member Button (Desktop) */}
           <a
             href="/plans"
             className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold border border-purple-300 hover:bg-purple-200 transition whitespace-nowrap"
@@ -184,7 +221,7 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
               </>
             ) : (
               <>
-                <button className="text-left text-purple-700" onClick={goToAccount}>My Account</button>
+                <button className="text-left text-purple-700" onClick={openAccount}>My Account</button>
 
                 {isAdmin && (
                   <button
@@ -202,6 +239,7 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
               </>
             )}
 
+            {/* ⭐ Become a Member Button (Mobile) */}
             <a
               href="/plans"
               className="text-left text-purple-700 font-semibold"
@@ -218,6 +256,7 @@ function Header({ setShowModal, user, isAdmin, setShowAdmin }) {
             >
               Schedule Pickup
             </button>
+
           </div>
         </div>
       )}
