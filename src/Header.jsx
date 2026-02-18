@@ -8,6 +8,21 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+
+  const [mode, setMode] = useState('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const openAuth = (newMode) => {
+    setMode(newMode);
+    setAuthOpen(true);
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+  };
 
   const openAccount = () => {
     setShowAccount(true);
@@ -20,6 +35,40 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
     setUserMenuOpen(false);
     setMobileMenuOpen(false);
   };
+
+  async function handleAuthSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullName } }
+        });
+        if (error) throw error;
+        alert('Account created! Check your email to confirm.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        if (error) throw error;
+        alert('Signed in successfully.');
+      }
+
+      setAuthOpen(false);
+      setEmail('');
+      setPassword('');
+      setFullName('');
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+
+    setLoading(false);
+  }
 
   const handleScheduleClick = () => {
     setShowModal(true);
@@ -67,7 +116,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             <FaShoppingCart size={20} />
           </a>
 
-          {/* Account Button */}
           <button
             aria-label="Account"
             onClick={() => {
@@ -83,8 +131,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             <div className="absolute right-0 top-10 bg-white shadow-lg rounded-md py-2 w-56 z-[1001]">
               {!user ? (
                 <>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>Sign In</button>
-                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={openAccount}>Create Account</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signin')}>Sign In</button>
+                  <button className="w-full text-left px-4 py-2 hover:bg-purple-50" onClick={() => openAuth('signup')}>Create Account</button>
                 </>
               ) : (
                 <>
@@ -108,7 +156,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             </div>
           )}
 
-          {/* Become a Member */}
+          {/* ⭐ Become a Member Button (Desktop) */}
           <a
             href="/plans"
             className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold border border-purple-300 hover:bg-purple-200 transition whitespace-nowrap"
@@ -116,7 +164,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             Become a Member
           </a>
 
-          {/* Schedule Pickup */}
           <button
             onClick={handleScheduleClick}
             className="bg-purple-700 text-white px-5 py-2 rounded-full font-semibold shadow hover:bg-purple-600 whitespace-nowrap"
@@ -169,8 +216,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
             {!user ? (
               <>
-                <button className="text-left text-purple-700" onClick={openAccount}>Sign In</button>
-                <button className="text-left text-purple-700" onClick={openAccount}>Create Account</button>
+                <button className="text-left text-purple-700" onClick={() => openAuth('signin')}>Sign In</button>
+                <button className="text-left text-purple-700" onClick={() => openAuth('signup')}>Create Account</button>
               </>
             ) : (
               <>
@@ -192,6 +239,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
               </>
             )}
 
+            {/* ⭐ Become a Member Button (Mobile) */}
             <a
               href="/plans"
               className="text-left text-purple-700 font-semibold"
@@ -208,6 +256,56 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             >
               Schedule Pickup
             </button>
+
+          </div>
+        </div>
+      )}
+
+      {/* Auth Modal */}
+      {authOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black opacity-40" onClick={() => setAuthOpen(false)} />
+
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-[2001]">
+
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">{mode === 'signin' ? 'Sign In' : 'Create Account'}</h3>
+              <button onClick={() => setAuthOpen(false)} className="text-gray-600">✕</button>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 block w-full border rounded px-3 py-2" />
+              </div>
+
+              {errorMsg && <p className="text-red-600 text-sm">{errorMsg}</p>}
+
+              <div className="flex items-center justify-between">
+                <button type="submit" disabled={loading} className="bg-purple-800 text-white px-4 py-2 rounded hover:bg-purple-700 disabled:opacity-50">
+                  {loading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Sign Up'}
+                </button>
+
+                <button type="button" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')} className="text-sm text-purple-700 underline">
+                  {mode === 'signin' ? 'Create an account' : 'Have an account? Sign in'}
+                </button>
+              </div>
+
+            </form>
+
           </div>
         </div>
       )}
