@@ -20,7 +20,7 @@ export default function MyAccount({ user, setShowAccount }) {
   });
 
   const [saving, setSaving] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
