@@ -25,61 +25,71 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
-  const [profileError, setProfileError] = useState(null);
 
   useEffect(() => {
-  const loadUserAndProfile = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const authUser = session?.user ?? null;
+    let mounted = true;
 
-      setUser(authUser);
+    const loadUserAndProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
 
-      if (!authUser) {
-        setIsAdmin(false);
-        setLoadingUser(false);
-        return;
+        const authUser = session?.user ?? null;
+        setUser(authUser);
+
+        if (!authUser) {
+          setIsAdmin(false);
+          setLoadingUser(false);
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authUser.id)
+          .maybeSingle();
+
+        if (mounted) {
+          setIsAdmin(profile?.is_admin === true);
+        }
+      } catch (err) {
+        console.warn('Profile load failed, continuing:', err);
+        if (mounted) setIsAdmin(false);
+      } finally {
+        if (mounted) setLoadingUser(false); // 🔑 ALWAYS CLEAR
       }
+    };
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', authUser.id)
-        .maybeSingle();
+    loadUserAndProfile();
 
-      setIsAdmin(profile?.is_admin === true);
-    } catch (err) {
-      console.warn('Profile load failed, continuing:', err);
-      setIsAdmin(false);
-    }
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
 
-    setLoadingUser(false); // 🔑 ALWAYS UNBLOCK
-  };
-
-  loadUserAndProfile();
-
-  const { data: listener } = supabase.auth.onAuthStateChange(
-    async (_event, session) => {
-      const authUser = session?.user ?? null;
-      setUser(authUser);
-
-      if (!authUser) {
+        const authUser = session?.user ?? null;
+        setUser(authUser);
         setIsAdmin(false);
-        return;
+        setLoadingUser(false); // 🔑 THIS FIXES LOGIN FREEZE
+
+        if (!authUser) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authUser.id)
+          .maybeSingle();
+
+        if (mounted) {
+          setIsAdmin(profile?.is_admin === true);
+        }
       }
+    );
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', authUser.id)
-        .maybeSingle();
-
-      setIsAdmin(profile?.is_admin === true);
-    }
-  );
-
-  return () => listener.subscription.unsubscribe();
-}, []);
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   if (loadingUser) {
     return <div className="p-10 text-center">Loading...</div>;
@@ -88,7 +98,6 @@ function App() {
   return (
     <Router>
       <div className="relative z-0">
-        {/* HEADER */}
         <Header
           setShowModal={setShowModal}
           user={user}
@@ -97,7 +106,6 @@ function App() {
           setShowAdmin={setShowAdmin}
         />
 
-        {/* ADMIN VIEW */}
         {showAdmin && isAdmin ? (
           <>
             <div className="p-4">
@@ -112,7 +120,6 @@ function App() {
           </>
         ) : (
           <>
-            {/* ROUTES */}
             <Routes>
               <Route
                 path="/"
@@ -155,12 +162,10 @@ function App() {
           </>
         )}
 
-        {/* SCHEDULE PICKUP MODAL */}
         {showModal && (
           <ScheduleModal setShowModal={setShowModal} user={user} />
         )}
 
-        {/* ✅ MY ACCOUNT MODAL (ONLY PLACE IT EXISTS) */}
         {showAccount && (
           <MyAccount user={user} setShowAccount={setShowAccount} />
         )}
