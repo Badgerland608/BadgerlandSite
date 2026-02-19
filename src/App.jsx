@@ -28,67 +28,61 @@ function App() {
   const [profileError, setProfileError] = useState(null);
 
   useEffect(() => {
-    const loadUserAndProfile = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+  const loadUserAndProfile = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUser = session?.user ?? null;
 
-        const authUser = session?.user ?? null;
-        setUser(authUser);
+      setUser(authUser);
 
-        if (authUser) {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', authUser.id)
-            .maybeSingle();
-
-          if (error && error.code !== "PGRST116") throw error;
-          setIsAdmin(profile?.is_admin === true);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (err) {
-        setProfileError(err.message);
+      if (!authUser) {
+        setIsAdmin(false);
+        setLoadingUser(false);
+        return;
       }
-      setLoadingUser(false);
-    };
 
-    loadUserAndProfile();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', authUser.id)
+        .maybeSingle();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const authUser = session?.user ?? null;
-        setUser(authUser);
+      setIsAdmin(profile?.is_admin === true);
+    } catch (err) {
+      console.warn('Profile load failed, continuing:', err);
+      setIsAdmin(false);
+    }
 
-        if (authUser) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', authUser.id)
-            .maybeSingle();
+    setLoadingUser(false); // 🔑 ALWAYS UNBLOCK
+  };
 
-          setIsAdmin(profile?.is_admin === true);
-        } else {
-          setIsAdmin(false);
-        }
+  loadUserAndProfile();
+
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    async (_event, session) => {
+      const authUser = session?.user ?? null;
+      setUser(authUser);
+
+      if (!authUser) {
+        setIsAdmin(false);
+        return;
       }
-    );
 
-    return () => listener.subscription.unsubscribe();
-  }, []);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      setIsAdmin(profile?.is_admin === true);
+    }
+  );
+
+  return () => listener.subscription.unsubscribe();
+}, []);
 
   if (loadingUser) {
     return <div className="p-10 text-center">Loading...</div>;
-  }
-
-  if (profileError) {
-    return (
-      <div className="p-10 text-center text-red-600">
-        Error loading profile: {profileError}
-      </div>
-    );
   }
 
   return (
