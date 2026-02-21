@@ -3,7 +3,8 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  useLocation
+  useLocation,
+  Link
 } from "react-router-dom";
 
 import Header from './Header';
@@ -197,12 +198,12 @@ function AppContent({ user, isAdmin }) {
                     <p className="text-purple-700 mb-4">
                       Become a member and enjoy included pounds, discounted rates, and priority service.
                     </p>
-                    <a
-                      href="/plans"
-                      className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold"
-                    >
-                      View Subscription Plans
-                    </a>
+                    <Link
+  to="/plans"
+  className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block"
+>
+  View Subscription Plans
+</Link>
                   </div>
 
                   <ServiceArea />
@@ -229,9 +230,9 @@ function AppContent({ user, isAdmin }) {
         <ScheduleModal setShowModal={setShowModal} user={user} />
       )}
 
-      {showAccount && (
-        <MyAccount user={user} setShowAccount={setShowAccount} />
-      )}
+      {showAccount && user && (
+  <MyAccount user={user} setShowAccount={setShowAccount} />
+)}
     </div>
   );
 }
