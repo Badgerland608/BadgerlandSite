@@ -36,7 +36,7 @@ export default function Plans() {
           <h2 className="text-xl font-semibold text-purple-700 mb-2">Family Plan</h2>
           <p className="text-gray-700 mb-1">• 120 lbs included per month</p>
           <p className="text-gray-700 mb-1">• 2 Pickups per month</p>
-          <p className="text-gray-700 mb-1">• Free pickup & deliver</p>
+          <p className="text-gray-700 mb-1">• Free pickup & delivery</p>
           <p className="text-gray-700 mb-1">• Priority scheduling</p>
           <p className="text-gray-700 mb-1">• $1.50/lb overage</p>
           <p className="text-gray-900 font-bold text-lg mt-2">$159 / month</p>
