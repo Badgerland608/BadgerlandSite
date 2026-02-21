@@ -17,6 +17,9 @@ export default function Plans() {
         <div className="border rounded-xl shadow p-6 flex flex-col">
           <h2 className="text-xl font-semibold text-purple-700 mb-2">Light Load</h2>
           <p className="text-gray-700 mb-1">• 60 lbs included per month</p>
+          <p className="text-gray-700 mb-1">• 1 pickup per month</p>
+          <p className="text-gray-700 mb-1">• Free pickup & delivery</p>
+          <p className="text-gray-700 mb-1">• Priority scheduling</p>
           <p className="text-gray-700 mb-1">• $1.60/lb overage</p>
           <p className="text-gray-900 font-bold text-lg mt-2">$89 / month</p>
 
@@ -31,8 +34,10 @@ export default function Plans() {
         {/* Family Plan */}
         <div className="border rounded-xl shadow p-6 flex flex-col">
           <h2 className="text-xl font-semibold text-purple-700 mb-2">Family Plan</h2>
-          <p className="text-gray-700 mb-1">• 200 lbs included per month</p>
-          <p className="text-gray-700 mb-1">• $1.50/lb overage</p>
+          <p className="text-gray-700 mb-1">• 120 lbs included per month</p>
+          <p className="text-gray-700 mb-1">• 2 Pickups per month</p>
+          <p className="text-gray-700 mb-1">• Free pickup & deliver</p>
+          <p className="text-gray-700 mb-1">• Priority scheduling</p>
           <p className="text-gray-900 font-bold text-lg mt-2">$159 / month</p>
 
           <a
@@ -47,6 +52,9 @@ export default function Plans() {
         <div className="border rounded-xl shadow p-6 flex flex-col">
           <h2 className="text-xl font-semibold text-purple-700 mb-2">Household Plan</h2>
           <p className="text-gray-700 mb-1">• 200 lbs included per month</p>
+          <p className="text-gray-700 mb-1">• 4 Pickups per month</p>
+          <p className="text-gray-700 mb-1">• Free pickup & delivery</p>
+          <p className="text-gray-700 mb-1">• Priority scheduling</p>
           <p className="text-gray-700 mb-1">• $1.50/lb overage</p>
           <p className="text-gray-900 font-bold text-lg mt-2">$239 / month</p>
 
