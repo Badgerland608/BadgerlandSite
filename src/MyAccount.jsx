@@ -3,35 +3,35 @@ import { supabase } from './lib/supabaseClient';
 
 export default function MyAccount({ user, setShowAccount }) {
   const [activeTab, setActiveTab] = useState('profile');
+
   const [profile, setProfile] = useState({
     full_name: '',
     phone: '',
     address: ''
   });
+
   const [orders, setOrders] = useState([]);
   const [subscription, setSubscription] = useState(null);
+
   const [notifySettings, setNotifySettings] = useState({
     email_enabled: true,
     sms_enabled: false,
     phone: ''
   });
+
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const isMounted = useRef(true);
 
-  /* ===========================
-     CLEANUP ON UNMOUNT
-  =========================== */
+  /* Cleanup */
   useEffect(() => {
     return () => {
       isMounted.current = false;
     };
   }, []);
 
-  /* ===========================
-     RESET STATE ON LOGOUT
-  =========================== */
+  /* Reset on logout */
   useEffect(() => {
     if (!user?.id) {
       setProfile({ full_name: '', phone: '', address: '' });
@@ -46,9 +46,7 @@ export default function MyAccount({ user, setShowAccount }) {
     }
   }, [user?.id]);
 
-  /* ===========================
-     LOAD ACCOUNT DATA
-  =========================== */
+  /* Load account data */
   useEffect(() => {
     if (!user?.id) return;
 
@@ -56,20 +54,22 @@ export default function MyAccount({ user, setShowAccount }) {
       setLoading(true);
 
       try {
+        /* PROFILE */
         const { data: profileData } = await supabase
           .from('profiles')
           .select('full_name, phone, address')
           .eq('id', user.id)
           .maybeSingle();
 
-        if (profileData && isMounted.current) {
+        if (isMounted.current) {
           setProfile({
-            full_name: profileData.full_name || '',
-            phone: profileData.phone || '',
-            address: profileData.address || ''
+            full_name: profileData?.full_name || '',
+            phone: profileData?.phone || '',
+            address: profileData?.address || ''
           });
         }
 
+        /* SUBSCRIPTION */
         const { data: subData } = await supabase
           .from('subscriptions')
           .select('*')
@@ -77,22 +77,26 @@ export default function MyAccount({ user, setShowAccount }) {
           .eq('active', true)
           .maybeSingle();
 
-        if (isMounted.current) setSubscription(subData || null);
+        if (isMounted.current) {
+          setSubscription(subData || null);
+        }
 
+        /* NOTIFICATION SETTINGS */
         const { data: notifyData } = await supabase
           .from('notification_settings')
           .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (notifyData && isMounted.current) {
+        if (isMounted.current) {
           setNotifySettings({
-            email_enabled: notifyData.email_enabled,
-            sms_enabled: notifyData.sms_enabled,
-            phone: notifyData.phone || ''
+            email_enabled: notifyData?.email_enabled ?? true,
+            sms_enabled: notifyData?.sms_enabled ?? false,
+            phone: notifyData?.phone || ''
           });
         }
 
+        /* ORDERS */
         const { data: ordersData } = await supabase
           .from('orders')
           .select(
@@ -101,10 +105,9 @@ export default function MyAccount({ user, setShowAccount }) {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (ordersData && isMounted.current) {
-          setOrders(ordersData);
+        if (isMounted.current) {
+          setOrders(ordersData || []);
         }
-
       } catch (err) {
         console.error('MyAccount load error:', err);
       } finally {
@@ -115,9 +118,7 @@ export default function MyAccount({ user, setShowAccount }) {
     loadData();
   }, [user?.id]);
 
-  /* ===========================
-     FORM HANDLERS
-  =========================== */
+  /* Form handlers */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
@@ -158,9 +159,7 @@ export default function MyAccount({ user, setShowAccount }) {
     }
   };
 
-  /* ===========================
-     UI
-  =========================== */
+  /* UI */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-2 sm:px-4">
       <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -202,6 +201,7 @@ export default function MyAccount({ user, setShowAccount }) {
                   className="w-full p-2 border border-purple-300 rounded"
                   placeholder="Full Name"
                 />
+
                 <input
                   name="phone"
                   value={profile.phone}
@@ -209,6 +209,7 @@ export default function MyAccount({ user, setShowAccount }) {
                   className="w-full p-2 border border-purple-300 rounded"
                   placeholder="Phone Number"
                 />
+
                 <input
                   name="address"
                   value={profile.address}
@@ -216,6 +217,7 @@ export default function MyAccount({ user, setShowAccount }) {
                   className="w-full p-2 border border-purple-300 rounded"
                   placeholder="Default Pickup Address"
                 />
+
                 <button
                   disabled={saving}
                   className="w-full bg-purple-600 text-white py-2 rounded font-semibold hover:bg-purple-700 transition disabled:opacity-60"
@@ -235,7 +237,7 @@ export default function MyAccount({ user, setShowAccount }) {
 
             {activeTab === 'orders' && (
               <div className="text-sm text-purple-900">
-                {orders.map((order) => (
+                {(orders || []).map((order) => (
                   <div
                     key={order.id}
                     className="border border-purple-200 rounded p-2 mb-2"
@@ -264,7 +266,8 @@ export default function MyAccount({ user, setShowAccount }) {
 /* ===========================
    SUBSCRIPTION DASHBOARD
 =========================== */
-function SubscriptionDashboard({ user, subscription, orders }) {
+
+function SubscriptionDashboard({ user, subscription }) {
   const [usage, setUsage] = useState({
     used: 0,
     remaining: subscription?.included_lbs ?? 0,
@@ -285,9 +288,10 @@ function SubscriptionDashboard({ user, subscription, orders }) {
           .eq('user_id', user.id)
           .gte('created_at', start.toISOString());
 
-        if (!data) return;
-
-        const used = data.reduce((sum, o) => sum + (o.pounds || 0), 0);
+        const used = (data || []).reduce(
+          (sum, o) => sum + (o.pounds || 0),
+          0
+        );
 
         setUsage({
           used,
@@ -307,6 +311,7 @@ function SubscriptionDashboard({ user, subscription, orders }) {
       <p className="font-semibold text-purple-800 mb-2">
         {subscription.plan_name}
       </p>
+
       <UsageBar
         used={usage.used}
         included={subscription?.included_lbs ?? 0}
