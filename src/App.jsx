@@ -24,9 +24,11 @@ import Residential from "./Residential";
 import Commercial from "./Commercial";
 import { supabase } from './lib/supabaseClient';
 
+
 /* ===========================
    ROUTE-AWARE APP CONTENT
 =========================== */
+
 function AppContent() {
   const location = useLocation();
 
@@ -37,18 +39,28 @@ function AppContent() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  /* ===========================
-     CLOSE MY ACCOUNT ON NAVIGATION
-  =========================== */
+  /* Close MyAccount on navigation */
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
 
+
   /* ===========================
      LOAD USER + ADMIN STATUS
-  =========================== */
+     + AUTO-CREATE MISSING ROWS
+  ============================ */
   useEffect(() => {
     let mounted = true;
+
+    // 🔥 Auto-create missing profile + notification_settings rows
+    async function ensureUserRows(userId) {
+      try {
+        await supabase.rpc('ensure_profile', { uid: userId });
+        await supabase.rpc('ensure_notify_settings', { uid: userId });
+      } catch (err) {
+        console.error("ensureUserRows error:", err);
+      }
+    }
 
     const loadUserAndProfile = async () => {
       try {
@@ -63,6 +75,9 @@ function AppContent() {
           setLoadingUser(false);
           return;
         }
+
+        // 🔥 Ensure required rows exist BEFORE loading profile
+        await ensureUserRows(authUser.id);
 
         const { data: profile } = await supabase
           .from('profiles')
@@ -94,6 +109,9 @@ function AppContent() {
 
         if (!authUser) return;
 
+        // 🔥 Ensure rows exist on login
+        await ensureUserRows(authUser.id);
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -112,9 +130,11 @@ function AppContent() {
     };
   }, []);
 
+
   if (loadingUser) {
     return <div className="p-10 text-center">Loading...</div>;
   }
+
 
   return (
     <div className="relative z-0">
@@ -136,6 +156,7 @@ function AppContent() {
               Back to site
             </button>
           </div>
+
           <AdminDashboard user={user} />
         </>
       ) : (
@@ -149,6 +170,7 @@ function AppContent() {
                   <Intro />
                   <HowItWorks />
                   <Rates />
+
                   <div className="text-center my-10 px-4">
                     <h2 className="text-2xl font-bold text-purple-800 mb-2">
                       Want to save money on every pickup?
@@ -163,6 +185,7 @@ function AppContent() {
                       View Subscription Plans
                     </a>
                   </div>
+
                   <ServiceArea />
                   <WhyChooseUs />
                   <FAQ />
@@ -170,6 +193,7 @@ function AppContent() {
                 </>
               }
             />
+
             <Route path="/plans" element={<Plans user={user} />} />
             <Route path="/about" element={<About />} />
             <Route path="/residential" element={<Residential />} />
@@ -193,9 +217,11 @@ function AppContent() {
   );
 }
 
+
 /* ===========================
    ROOT APP
 =========================== */
+
 export default function App() {
   return (
     <Router>
