@@ -223,6 +223,14 @@ export default function MyAccount({ user, setShowAccount }) {
                   placeholder="Full Name"
                 />
 
+              <input
+                  name="email_address"
+                  value={profile.email_address}
+                  onChange={handleChange}
+                  className="w-full p-2 border border-purple-300 rounded"
+                  placeholder="Email Address"
+                />
+
                 <input
                   name="phone"
                   value={profile.phone}
