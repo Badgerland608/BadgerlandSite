@@ -69,8 +69,10 @@ export default function App() {
 
       if (mounted) {
         setIsAdmin(profile?.is_admin === true);
-        setLoadingUser(false);
       }
+
+      // ⭐ ALWAYS end loading
+      setLoadingUser(false);
     };
 
     loadInitialSession();
@@ -114,7 +116,6 @@ export default function App() {
       <AppContent
         user={user}
         isAdmin={isAdmin}
-        setUser={setUser}
       />
     </Router>
   );
