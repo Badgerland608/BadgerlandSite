@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation
+} from "react-router-dom";
+
 import Header from './Header';
 import Hero from './Hero';
 import Intro from './Intro';
@@ -18,7 +24,12 @@ import Residential from "./Residential";
 import Commercial from "./Commercial";
 import { supabase } from './lib/supabaseClient';
 
-function App() {
+/* ===========================
+   ROUTE-AWARE APP CONTENT
+=========================== */
+function AppContent() {
+  const location = useLocation();
+
   const [showModal, setShowModal] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -26,6 +37,16 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  /* ===========================
+     CLOSE MY ACCOUNT ON NAVIGATION
+  =========================== */
+  useEffect(() => {
+    setShowAccount(false);
+  }, [location.pathname]);
+
+  /* ===========================
+     LOAD USER + ADMIN STATUS
+  =========================== */
   useEffect(() => {
     let mounted = true;
 
@@ -56,7 +77,7 @@ function App() {
         console.warn('Profile load failed, continuing:', err);
         if (mounted) setIsAdmin(false);
       } finally {
-        if (mounted) setLoadingUser(false); // 🔑 ALWAYS CLEAR
+        if (mounted) setLoadingUser(false);
       }
     };
 
@@ -69,7 +90,7 @@ function App() {
         const authUser = session?.user ?? null;
         setUser(authUser);
         setIsAdmin(false);
-        setLoadingUser(false); // 🔑 THIS FIXES LOGIN FREEZE
+        setLoadingUser(false);
 
         if (!authUser) return;
 
@@ -96,82 +117,89 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="relative z-0">
-        <Header
-          setShowModal={setShowModal}
-          user={user}
-          setShowAccount={setShowAccount}
-          isAdmin={isAdmin}
-          setShowAdmin={setShowAdmin}
-        />
+    <div className="relative z-0">
+      <Header
+        setShowModal={setShowModal}
+        user={user}
+        setShowAccount={setShowAccount}
+        isAdmin={isAdmin}
+        setShowAdmin={setShowAdmin}
+      />
 
-        {showAdmin && isAdmin ? (
-          <>
-            <div className="p-4">
-              <button
-                onClick={() => setShowAdmin(false)}
-                className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
-              >
-                Back to site
-              </button>
-            </div>
-            <AdminDashboard user={user} />
-          </>
-        ) : (
-          <>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <>
-                    <Hero />
-                    <Intro />
-                    <HowItWorks />
-                    <Rates />
-                    <div className="text-center my-10 px-4">
-                      <h2 className="text-2xl font-bold text-purple-800 mb-2">
-                        Want to save money on every pickup?
-                      </h2>
-                      <p className="text-purple-700 mb-4">
-                        Become a member and enjoy included pounds, discounted rates, and priority service.
-                      </p>
-                      <a
-                        href="/plans"
-                        className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold"
-                      >
-                        View Subscription Plans
-                      </a>
-                    </div>
-                    <ServiceArea />
-                    <WhyChooseUs />
-                    <FAQ />
-                    <FinalCTA />
-                  </>
-                }
-              />
-              <Route path="/plans" element={<Plans user={user} />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/residential" element={<Residential />} />
-              <Route path="/commercial" element={<Commercial />} />
-            </Routes>
+      {showAdmin && isAdmin ? (
+        <>
+          <div className="p-4">
+            <button
+              onClick={() => setShowAdmin(false)}
+              className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
+            >
+              Back to site
+            </button>
+          </div>
+          <AdminDashboard user={user} />
+        </>
+      ) : (
+        <>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <Hero />
+                  <Intro />
+                  <HowItWorks />
+                  <Rates />
+                  <div className="text-center my-10 px-4">
+                    <h2 className="text-2xl font-bold text-purple-800 mb-2">
+                      Want to save money on every pickup?
+                    </h2>
+                    <p className="text-purple-700 mb-4">
+                      Become a member and enjoy included pounds, discounted rates, and priority service.
+                    </p>
+                    <a
+                      href="/plans"
+                      className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold"
+                    >
+                      View Subscription Plans
+                    </a>
+                  </div>
+                  <ServiceArea />
+                  <WhyChooseUs />
+                  <FAQ />
+                  <FinalCTA />
+                </>
+              }
+            />
+            <Route path="/plans" element={<Plans user={user} />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/residential" element={<Residential />} />
+            <Route path="/commercial" element={<Commercial />} />
+          </Routes>
 
-            <footer className="bg-purple-900 text-white text-center py-3">
-              Badgerland Laundry LLC
-            </footer>
-          </>
-        )}
+          <footer className="bg-purple-900 text-white text-center py-3">
+            Badgerland Laundry LLC
+          </footer>
+        </>
+      )}
 
-        {showModal && (
-          <ScheduleModal setShowModal={setShowModal} user={user} />
-        )}
+      {showModal && (
+        <ScheduleModal setShowModal={setShowModal} user={user} />
+      )}
 
-        {showAccount && (
-          <MyAccount user={user} setShowAccount={setShowAccount} />
-        )}
-      </div>
-    </Router>
+      {showAccount && (
+        <MyAccount user={user} setShowAccount={setShowAccount} />
+      )}
+    </div>
   );
 }
 
-export default App;
+/* ===========================
+   ROOT APP
+=========================== */
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
