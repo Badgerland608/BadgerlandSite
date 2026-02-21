@@ -26,67 +26,90 @@ import { supabase } from './lib/supabaseClient';
 
 
 /* ===========================
-   ROOT APP — AUTH LIVES HERE
+   ROUTE-AWARE APP CONTENT
 =========================== */
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+
+  const [showModal, setShowModal] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // Auto-create missing rows
-  async function ensureUserRows(userId) {
-    try {
-      await supabase.rpc('ensure_profile', { uid: userId });
-      await supabase.rpc('ensure_notify_settings', { uid: userId });
-    } catch (err) {
-      console.error("ensureUserRows error:", err);
-    }
-  }
+  /* Close MyAccount on navigation */
+  useEffect(() => {
+    setShowAccount(false);
+  }, [location.pathname]);
 
+
+  /* ===========================
+     LOAD USER + ADMIN STATUS
+     + AUTO-CREATE MISSING ROWS
+  ============================ */
   useEffect(() => {
     let mounted = true;
 
-    const loadInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const authUser = session?.user ?? null;
-
-      setUser(authUser);
-
-      if (!authUser) {
-        setIsAdmin(false);
-        setLoadingUser(false);
-        return;
+    // 🔥 Auto-create missing profile + notification_settings rows
+    async function ensureUserRows(userId) {
+      try {
+        await supabase.rpc('ensure_profile', { uid: userId });
+        await supabase.rpc('ensure_notify_settings', { uid: userId });
+      } catch (err) {
+        console.error("ensureUserRows error:", err);
       }
+    }
 
-      await ensureUserRows(authUser.id);
+    const loadUserAndProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', authUser.id)
-        .maybeSingle();
-
-      if (mounted) {
-        setIsAdmin(profile?.is_admin === true);
-      }
-
-      // ⭐ ALWAYS end loading
-      setLoadingUser(false);
-    };
-
-    loadInitialSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
         const authUser = session?.user ?? null;
         setUser(authUser);
 
         if (!authUser) {
           setIsAdmin(false);
+          setLoadingUser(false);
           return;
         }
 
+        // 🔥 Ensure required rows exist BEFORE loading profile
+        await ensureUserRows(authUser.id);
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authUser.id)
+          .maybeSingle();
+
+        if (mounted) {
+          setIsAdmin(profile?.is_admin === true);
+        }
+      } catch (err) {
+        console.warn('Profile load failed, continuing:', err);
+        if (mounted) setIsAdmin(false);
+      } finally {
+        if (mounted) setLoadingUser(false);
+      }
+    };
+
+    loadUserAndProfile();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+
+        const authUser = session?.user ?? null;
+        setUser(authUser);
+        setIsAdmin(false);
+        setLoadingUser(false);
+
+        if (!authUser) return;
+
+        // 🔥 Ensure rows exist on login
         await ensureUserRows(authUser.id);
 
         const { data: profile } = await supabase
@@ -107,36 +130,11 @@ export default function App() {
     };
   }, []);
 
+
   if (loadingUser) {
     return <div className="p-10 text-center">Loading...</div>;
   }
 
-  return (
-    <Router>
-      <AppContent
-        user={user}
-        isAdmin={isAdmin}
-      />
-    </Router>
-  );
-}
-
-
-/* ===========================
-   APP CONTENT — UI ONLY
-=========================== */
-
-function AppContent({ user, isAdmin }) {
-  const location = useLocation();
-
-  const [showModal, setShowModal] = useState(false);
-  const [showAccount, setShowAccount] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
-
-  // Close MyAccount on navigation
-  useEffect(() => {
-    setShowAccount(false);
-  }, [location.pathname]);
 
   return (
     <div className="relative z-0">
@@ -216,5 +214,18 @@ function AppContent({ user, isAdmin }) {
         <MyAccount user={user} setShowAccount={setShowAccount} />
       )}
     </div>
+  );
+}
+
+
+/* ===========================
+   ROOT APP
+=========================== */
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
