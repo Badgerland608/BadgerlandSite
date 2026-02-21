@@ -39,7 +39,7 @@ export default function Plans() {
           <p className="text-gray-700 mb-1">• Free pickup & deliver</p>
           <p className="text-gray-700 mb-1">• Priority scheduling</p>
           <p className="text-gray-900 font-bold text-lg mt-2">$159 / month</p>
-
+          
           <a
             href="https://buy.stripe.com/8x2dR8euY2J3g1Jfbx0Jq05"
             className="mt-auto bg-purple-700 text-white text-center py-2 rounded-lg font-semibold hover:bg-purple-800 transition"
