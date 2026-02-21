@@ -25,9 +25,8 @@ import Residential from "./Residential";
 import Commercial from "./Commercial";
 import { supabase } from './lib/supabaseClient';
 
-
 /* ===========================
-   ROOT APP — AUTH LIVES HERE
+ROOT APP — AUTH LIVES HERE
 =========================== */
 
 export default function App() {
@@ -73,13 +72,9 @@ export default function App() {
         }
       } catch (err) {
         console.error('loadInitialSession error:', err);
-        if (mounted) {
-          setIsAdmin(false);
-        }
+        if (mounted) setIsAdmin(false);
       } finally {
-        if (mounted) {
-          setLoadingUser(false);
-        }
+        if (mounted) setLoadingUser(false);
       }
     };
 
@@ -91,7 +86,7 @@ export default function App() {
 
         const authUser = session?.user ?? null;
         setUser(authUser);
-        setLoadingUser(false); // 🔑 FIX: clear loading after login/logout
+        setLoadingUser(false);
 
         if (!authUser) {
           setIsAdmin(false);
@@ -112,9 +107,7 @@ export default function App() {
           }
         } catch (err) {
           console.error('onAuthStateChange profile load error:', err);
-          if (mounted) {
-            setIsAdmin(false);
-          }
+          if (mounted) setIsAdmin(false);
         }
       }
     );
@@ -139,9 +132,8 @@ export default function App() {
   );
 }
 
-
 /* ===========================
-   APP CONTENT — UI ONLY
+APP CONTENT — UI ONLY
 =========================== */
 
 function AppContent({ user, isAdmin }) {
@@ -151,10 +143,18 @@ function AppContent({ user, isAdmin }) {
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // 🔑 Prevent modal crashes during navigation
+  // Close account panel when navigating
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
+
+  // 🔥 FIX: Close account/admin panels when user logs out
+  useEffect(() => {
+    if (!user) {
+      setShowAccount(false);
+      setShowAdmin(false);
+    }
+  }, [user]);
 
   return (
     <div className="relative z-0">
@@ -199,11 +199,11 @@ function AppContent({ user, isAdmin }) {
                       Become a member and enjoy included pounds, discounted rates, and priority service.
                     </p>
                     <Link
-  to="/plans"
-  className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block"
->
-  View Subscription Plans
-</Link>
+                      to="/plans"
+                      className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block"
+                    >
+                      View Subscription Plans
+                    </Link>
                   </div>
 
                   <ServiceArea />
@@ -231,8 +231,8 @@ function AppContent({ user, isAdmin }) {
       )}
 
       {showAccount && user && (
-  <MyAccount user={user} setShowAccount={setShowAccount} />
-)}
+        <MyAccount user={user} setShowAccount={setShowAccount} />
+      )}
     </div>
   );
 }
