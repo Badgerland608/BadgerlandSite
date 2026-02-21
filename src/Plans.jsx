@@ -44,7 +44,7 @@ export default function Plans() {
             pickups: "4 pickups",
             bags: "4 free laundry bags",
             price: "$349 / month",
-            link: "https://buy.stripe.com/fZu14maeI1EZ2aTe7t0Jq08",
+            link: "https://buy.stripe.com/fZucN4fz2bfzdTB0gD0Jq09",
           },
         ].map((plan, i) => (
           <div
