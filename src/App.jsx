@@ -34,7 +34,6 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // Auto-create missing rows
   async function ensureUserRows(userId) {
     try {
       await supabase.rpc('ensure_profile', { uid: userId });
@@ -48,37 +47,10 @@ export default function App() {
     let mounted = true;
 
     const loadInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const authUser = session?.user ?? null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
 
-      setUser(authUser);
-
-      if (!authUser) {
-        setIsAdmin(false);
-        setLoadingUser(false);
-        return;
-      }
-
-      await ensureUserRows(authUser.id);
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_admin')
-        .eq('id', authUser.id)
-        .maybeSingle();
-
-      if (mounted) {
-        setIsAdmin(profile?.is_admin === true);
-      }
-
-      // ⭐ ALWAYS end loading
-      setLoadingUser(false);
-    };
-
-    loadInitialSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
         const authUser = session?.user ?? null;
         setUser(authUser);
 
@@ -97,6 +69,50 @@ export default function App() {
 
         if (mounted) {
           setIsAdmin(profile?.is_admin === true);
+        }
+      } catch (err) {
+        console.error('loadInitialSession error:', err);
+        if (mounted) {
+          setIsAdmin(false);
+        }
+      } finally {
+        if (mounted) {
+          setLoadingUser(false);
+        }
+      }
+    };
+
+    loadInitialSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!mounted) return;
+
+        const authUser = session?.user ?? null;
+        setUser(authUser);
+
+        if (!authUser) {
+          setIsAdmin(false);
+          return;
+        }
+
+        try {
+          await ensureUserRows(authUser.id);
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', authUser.id)
+            .maybeSingle();
+
+          if (mounted) {
+            setIsAdmin(profile?.is_admin === true);
+          }
+        } catch (err) {
+          console.error('onAuthStateChange profile load error:', err);
+          if (mounted) {
+            setIsAdmin(false);
+          }
         }
       }
     );
@@ -133,7 +149,6 @@ function AppContent({ user, isAdmin }) {
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Close MyAccount on navigation
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
