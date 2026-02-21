@@ -90,6 +90,7 @@ export default function App() {
 
         const authUser = session?.user ?? null;
         setUser(authUser);
+        setLoadingUser(false); // 🔑 FIX: clear loading after login/logout
 
         if (!authUser) {
           setIsAdmin(false);
@@ -119,7 +120,7 @@ export default function App() {
 
     return () => {
       mounted = false;
-      listener.subscription.unsubscribe();
+      listener?.subscription?.unsubscribe?.();
     };
   }, []);
 
@@ -149,6 +150,7 @@ function AppContent({ user, isAdmin }) {
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
+  // 🔑 Prevent modal crashes during navigation
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
