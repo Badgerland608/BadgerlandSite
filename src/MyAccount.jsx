@@ -24,16 +24,24 @@ export default function MyAccount({ user, setShowAccount }) {
 
   const isMounted = useRef(true);
 
-  /* Cleanup */
+  /* ===========================
+     MOUNT / UNMOUNT SAFETY
+  =========================== */
   useEffect(() => {
+    isMounted.current = true;
     return () => {
       isMounted.current = false;
     };
   }, []);
 
-  /* Reset on logout */
+  /* ===========================
+     RESET STATE ON LOGOUT
+  =========================== */
   useEffect(() => {
     if (!user?.id) {
+      if (!isMounted.current) return;
+
+      setActiveTab('profile');
       setProfile({ full_name: '', phone: '', address: '' });
       setOrders([]);
       setSubscription(null);
@@ -46,9 +54,13 @@ export default function MyAccount({ user, setShowAccount }) {
     }
   }, [user?.id]);
 
-  /* Load account data */
+  /* ===========================
+     LOAD ACCOUNT DATA
+  =========================== */
   useEffect(() => {
     if (!user?.id) return;
+
+    let cancelled = false;
 
     const loadData = async () => {
       setLoading(true);
@@ -61,7 +73,7 @@ export default function MyAccount({ user, setShowAccount }) {
           .eq('id', user.id)
           .maybeSingle();
 
-        if (isMounted.current) {
+        if (!cancelled && isMounted.current) {
           setProfile({
             full_name: profileData?.full_name || '',
             phone: profileData?.phone || '',
@@ -77,7 +89,7 @@ export default function MyAccount({ user, setShowAccount }) {
           .eq('active', true)
           .maybeSingle();
 
-        if (isMounted.current) {
+        if (!cancelled && isMounted.current) {
           setSubscription(subData || null);
         }
 
@@ -88,7 +100,7 @@ export default function MyAccount({ user, setShowAccount }) {
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (isMounted.current) {
+        if (!cancelled && isMounted.current) {
           setNotifySettings({
             email_enabled: notifyData?.email_enabled ?? true,
             sms_enabled: notifyData?.sms_enabled ?? false,
@@ -105,20 +117,28 @@ export default function MyAccount({ user, setShowAccount }) {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        if (isMounted.current) {
+        if (!cancelled && isMounted.current) {
           setOrders(ordersData || []);
         }
       } catch (err) {
         console.error('MyAccount load error:', err);
       } finally {
-        if (isMounted.current) setLoading(false);
+        if (!cancelled && isMounted.current) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id]);
 
-  /* Form handlers */
+  /* ===========================
+     FORM HANDLERS
+  =========================== */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
@@ -137,7 +157,6 @@ export default function MyAccount({ user, setShowAccount }) {
     if (!user?.id) return;
 
     setSaving(true);
-
     try {
       await supabase.from('profiles').upsert({
         id: user.id,
@@ -155,11 +174,13 @@ export default function MyAccount({ user, setShowAccount }) {
     } catch (err) {
       console.error('Save error:', err);
     } finally {
-      setSaving(false);
+      if (isMounted.current) setSaving(false);
     }
   };
 
-  /* UI */
+  /* ===========================
+     UI
+  =========================== */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-2 sm:px-4">
       <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -231,7 +252,6 @@ export default function MyAccount({ user, setShowAccount }) {
               <SubscriptionDashboard
                 user={user}
                 subscription={subscription}
-                orders={orders}
               />
             )}
 
@@ -244,7 +264,10 @@ export default function MyAccount({ user, setShowAccount }) {
                   >
                     <p><strong>Status:</strong> {order.status}</p>
                     <p><strong>Pounds:</strong> {order.pounds || 0}</p>
-                    <p><strong>Total:</strong> ${(order.total_price || 0).toFixed(2)}</p>
+                    <p>
+                      <strong>Total:</strong>{' '}
+                      ${(order.total_price || 0).toFixed(2)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -277,6 +300,8 @@ function SubscriptionDashboard({ user, subscription }) {
   useEffect(() => {
     if (!user?.id || !subscription) return;
 
+    let cancelled = false;
+
     const loadUsage = async () => {
       try {
         const start = new Date();
@@ -287,6 +312,8 @@ function SubscriptionDashboard({ user, subscription }) {
           .select('pounds')
           .eq('user_id', user.id)
           .gte('created_at', start.toISOString());
+
+        if (cancelled) return;
 
         const used = (data || []).reduce(
           (sum, o) => sum + (o.pounds || 0),
@@ -304,6 +331,10 @@ function SubscriptionDashboard({ user, subscription }) {
     };
 
     loadUsage();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id, subscription]);
 
   return (
@@ -311,7 +342,6 @@ function SubscriptionDashboard({ user, subscription }) {
       <p className="font-semibold text-purple-800 mb-2">
         {subscription.plan_name}
       </p>
-
       <UsageBar
         used={usage.used}
         included={subscription?.included_lbs ?? 0}
