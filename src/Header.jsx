@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from "react-router-dom";
 import { FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
 
@@ -22,7 +23,6 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
     setServicesOpen(false);
   };
 
-  // ✅ FIXED: safely open My Account modal
   const openAccount = () => {
     setUserMenuOpen(false);
     setMobileMenuOpen(false);
@@ -75,9 +75,9 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
   };
 
   return (
-    // ✅ FIXED: lower z-index so modals appear ABOVE header
     <header className="sticky top-0 z-[40] bg-gray-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
+
         {/* Logo */}
         <div className="flex items-center gap-2">
           <img src="/BL-2.png" alt="BL" className="h-10 w-10" />
@@ -88,8 +88,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex gap-6 text-blue-900 font-medium">
-          <a href="/" className="hover:text-blue-600">Home</a>
-          <a href="/About" className="hover:text-blue-600">About</a>
+          <Link to="/" className="hover:text-blue-600">Home</Link>
+          <Link to="/About" className="hover:text-blue-600">About</Link>
 
           <div className="relative">
             <button
@@ -104,12 +104,12 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
             {servicesOpen && (
               <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
-                <a href="/Residential" className="block px-4 py-2 hover:bg-blue-50">
+                <Link to="/Residential" className="block px-4 py-2 hover:bg-blue-50">
                   Residential
-                </a>
-                <a href="/Commercial" className="block px-4 py-2 hover:bg-blue-50">
+                </Link>
+                <Link to="/Commercial" className="block px-4 py-2 hover:bg-blue-50">
                   Commercial
-                </a>
+                </Link>
               </div>
             )}
           </div>
@@ -117,9 +117,9 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
         {/* Desktop Icons */}
         <div className="hidden md:flex items-center gap-6 relative">
-          <a href="/cart" className="text-purple-900 hover:text-purple-600">
+          <Link to="/cart" className="text-purple-900 hover:text-purple-600">
             <FaShoppingCart size={20} />
-          </a>
+          </Link>
 
           <button
             onClick={() => {
@@ -174,12 +174,12 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             </div>
           )}
 
-          <a
-            href="/plans"
+          <Link
+            to="/plans"
             className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full font-semibold border border-purple-300 hover:bg-purple-200"
           >
             Become a Member
-          </a>
+          </Link>
 
           <button
             onClick={handleScheduleClick}
@@ -205,6 +205,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             className="flex-1 bg-black bg-opacity-40"
             onClick={() => setMobileMenuOpen(false)}
           />
+
           <div className="w-64 bg-white h-full shadow-xl p-5 flex flex-col gap-4">
             <div className="flex justify-end">
               <button onClick={() => setMobileMenuOpen(false)}>
@@ -212,8 +213,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
               </button>
             </div>
 
-            <a href="/">Home</a>
-            <a href="/About">About</a>
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to="/About" onClick={() => setMobileMenuOpen(false)}>About</Link>
 
             <button onClick={() => setServicesOpen(!servicesOpen)}>
               Services
@@ -221,8 +222,8 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
 
             {servicesOpen && (
               <div className="ml-4 space-y-2">
-                <a href="/Residential">Residential</a>
-                <a href="/Commercial">Commercial</a>
+                <Link to="/Residential" onClick={() => setMobileMenuOpen(false)}>Residential</Link>
+                <Link to="/Commercial" onClick={() => setMobileMenuOpen(false)}>Commercial</Link>
               </div>
             )}
 
@@ -250,7 +251,7 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
               </>
             )}
 
-            <a href="/plans">Become a Member</a>
+            <Link to="/plans" onClick={() => setMobileMenuOpen(false)}>Become a Member</Link>
 
             <button
               onClick={() => {
@@ -265,10 +266,11 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
         </div>
       )}
 
-      {/* Auth Modal (unchanged) */}
+      {/* Auth Modal */}
       {authOpen && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center">
           <div className="absolute inset-0 bg-black opacity-40" onClick={() => setAuthOpen(false)} />
+
           <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md p-6 z-[2001]">
             <h3 className="text-lg font-semibold mb-4">
               {mode === 'signin' ? 'Sign In' : 'Create Account'}
