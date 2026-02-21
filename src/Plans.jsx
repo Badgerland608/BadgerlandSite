@@ -76,7 +76,7 @@ export default function Plans() {
           <p className="text-gray-700 mb-1">• Priority scheduling</p>
           <p className="text-gray-700 mb-1">• 4 free laundry bags</p>
           <p className="text-gray-700 mb-1">• $1.50/lb overage</p>
-          <p className="text-gray-900 font-bold text-lg mt-2">$299 / month</p>
+          <p className="text-gray-900 font-bold text-lg mt-2">$349 / month</p>
 
           <a
             href="https://buy.stripe.com/fZu14maeI1EZ2aTe7t0Jq08"
