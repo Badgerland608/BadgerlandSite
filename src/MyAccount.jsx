@@ -1,84 +1,115 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
 
 export default function MyAccount({ user, setShowAccount }) {
   const [activeTab, setActiveTab] = useState('profile');
-
   const [profile, setProfile] = useState({
     full_name: '',
     phone: '',
     address: ''
   });
-
   const [orders, setOrders] = useState([]);
   const [subscription, setSubscription] = useState(null);
-
   const [notifySettings, setNotifySettings] = useState({
     email_enabled: true,
     sms_enabled: false,
     phone: ''
   });
-
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const isMounted = useRef(true);
+
+  /* ===========================
+     CLEANUP ON UNMOUNT
+  =========================== */
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  /* ===========================
+     RESET STATE ON LOGOUT
+  =========================== */
+  useEffect(() => {
+    if (!user?.id) {
+      setProfile({ full_name: '', phone: '', address: '' });
+      setOrders([]);
+      setSubscription(null);
+      setNotifySettings({
+        email_enabled: true,
+        sms_enabled: false,
+        phone: ''
+      });
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   /* ===========================
      LOAD ACCOUNT DATA
   =========================== */
   useEffect(() => {
-    if (!user?.id) return; // ✅ GUARD: prevents auth transition crash
+    if (!user?.id) return;
 
     const loadData = async () => {
       setLoading(true);
 
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('full_name, phone, address')
-        .eq('id', user.id)
-        .maybeSingle();
+      try {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('full_name, phone, address')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (profileData) {
-        setProfile({
-          full_name: profileData.full_name || '',
-          phone: profileData.phone || '',
-          address: profileData.address || ''
-        });
+        if (profileData && isMounted.current) {
+          setProfile({
+            full_name: profileData.full_name || '',
+            phone: profileData.phone || '',
+            address: profileData.address || ''
+          });
+        }
+
+        const { data: subData } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('active', true)
+          .maybeSingle();
+
+        if (isMounted.current) setSubscription(subData || null);
+
+        const { data: notifyData } = await supabase
+          .from('notification_settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (notifyData && isMounted.current) {
+          setNotifySettings({
+            email_enabled: notifyData.email_enabled,
+            sms_enabled: notifyData.sms_enabled,
+            phone: notifyData.phone || ''
+          });
+        }
+
+        const { data: ordersData } = await supabase
+          .from('orders')
+          .select(
+            'id, pickup_time, delivery_time, pounds, total_price, status, created_at'
+          )
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (ordersData && isMounted.current) {
+          setOrders(ordersData);
+        }
+
+      } catch (err) {
+        console.error('MyAccount load error:', err);
+      } finally {
+        if (isMounted.current) setLoading(false);
       }
-
-      const { data: subData } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('active', true)
-        .maybeSingle();
-
-      if (subData) setSubscription(subData);
-
-      const { data: notifyData } = await supabase
-        .from('notification_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (notifyData) {
-        setNotifySettings({
-          email_enabled: notifyData.email_enabled,
-          sms_enabled: notifyData.sms_enabled,
-          phone: notifyData.phone || ''
-        });
-      }
-
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select(
-          'id, pickup_time, delivery_time, pounds, total_price, status, created_at'
-        )
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (ordersData) setOrders(ordersData);
-
-      setLoading(false);
     };
 
     loadData();
@@ -102,26 +133,29 @@ export default function MyAccount({ user, setShowAccount }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!user?.id) return; // ✅ GUARD
+    if (!user?.id) return;
 
     setSaving(true);
 
-    await supabase.from('profiles').upsert({
-      id: user.id,
-      full_name: profile.full_name,
-      phone: profile.phone,
-      address: profile.address
-    });
+    try {
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        full_name: profile.full_name,
+        phone: profile.phone,
+        address: profile.address
+      });
 
-    await supabase.from('notification_settings').upsert({
-      user_id: user.id,
-      email_enabled: notifySettings.email_enabled,
-      sms_enabled: notifySettings.sms_enabled,
-      phone: notifySettings.phone
-    });
-
-    setSaving(false);
-    alert('Profile updated.');
+      await supabase.from('notification_settings').upsert({
+        user_id: user.id,
+        email_enabled: notifySettings.email_enabled,
+        sms_enabled: notifySettings.sms_enabled,
+        phone: notifySettings.phone
+      });
+    } catch (err) {
+      console.error('Save error:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   /* ===========================
@@ -161,8 +195,6 @@ export default function MyAccount({ user, setShowAccount }) {
                 onSubmit={handleSave}
                 className="space-y-3 text-sm text-purple-900 mb-6"
               >
-                <h3 className="font-semibold text-purple-800">Profile Info</h3>
-
                 <input
                   name="full_name"
                   value={profile.full_name}
@@ -170,7 +202,6 @@ export default function MyAccount({ user, setShowAccount }) {
                   className="w-full p-2 border border-purple-300 rounded"
                   placeholder="Full Name"
                 />
-
                 <input
                   name="phone"
                   value={profile.phone}
@@ -178,7 +209,6 @@ export default function MyAccount({ user, setShowAccount }) {
                   className="w-full p-2 border border-purple-300 rounded"
                   placeholder="Phone Number"
                 />
-
                 <input
                   name="address"
                   value={profile.address}
@@ -186,39 +216,6 @@ export default function MyAccount({ user, setShowAccount }) {
                   className="w-full p-2 border border-purple-300 rounded"
                   placeholder="Default Pickup Address"
                 />
-
-                <h3 className="font-semibold text-purple-800 mt-4">
-                  Notifications
-                </h3>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="email_enabled"
-                    checked={notifySettings.email_enabled}
-                    onChange={handleNotifyChange}
-                  />
-                  Email Notifications
-                </label>
-
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="sms_enabled"
-                    checked={notifySettings.sms_enabled}
-                    onChange={handleNotifyChange}
-                  />
-                  SMS Notifications
-                </label>
-
-                <input
-                  name="phone"
-                  value={notifySettings.phone}
-                  onChange={handleNotifyChange}
-                  className="w-full p-2 border border-purple-300 rounded"
-                  placeholder="SMS Phone Number"
-                />
-
                 <button
                   disabled={saving}
                   className="w-full bg-purple-600 text-white py-2 rounded font-semibold hover:bg-purple-700 transition disabled:opacity-60"
@@ -243,17 +240,9 @@ export default function MyAccount({ user, setShowAccount }) {
                     key={order.id}
                     className="border border-purple-200 rounded p-2 mb-2"
                   >
-                    <p>
-                      <strong>Status:</strong>{' '}
-                      {order.status?.replace(/_/g, ' ')}
-                    </p>
-                    <p>
-                      <strong>Pounds:</strong> {order.pounds || 0}
-                    </p>
-                    <p>
-                      <strong>Total:</strong> $
-                      {(order.total_price || 0).toFixed(2)}
-                    </p>
+                    <p><strong>Status:</strong> {order.status}</p>
+                    <p><strong>Pounds:</strong> {order.pounds || 0}</p>
+                    <p><strong>Total:</strong> ${(order.total_price || 0).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
@@ -278,69 +267,56 @@ export default function MyAccount({ user, setShowAccount }) {
 function SubscriptionDashboard({ user, subscription, orders }) {
   const [usage, setUsage] = useState({
     used: 0,
-    remaining: subscription?.included_lbs ?? 0, // ✅ GUARD
+    remaining: subscription?.included_lbs ?? 0,
     savings: 0
   });
 
   useEffect(() => {
-    if (!user?.id || !subscription) return; // ✅ GUARD
-
-    const start = new Date();
-    start.setDate(1);
-    const startStr = start.toISOString().split('T')[0];
+    if (!user?.id || !subscription) return;
 
     const loadUsage = async () => {
-      const { data: monthOrders } = await supabase
-        .from('orders')
-        .select('pounds')
-        .eq('user_id', user.id)
-        .gte('created_at', startStr);
+      try {
+        const start = new Date();
+        start.setDate(1);
 
-      if (!monthOrders) return;
+        const { data } = await supabase
+          .from('orders')
+          .select('pounds')
+          .eq('user_id', user.id)
+          .gte('created_at', start.toISOString());
 
-      const used = monthOrders.reduce(
-        (sum, o) => sum + (o.pounds || 0),
-        0
-      );
+        if (!data) return;
 
-      const remaining = Math.max(
-        (subscription.included_lbs || 0) - used,
-        0
-      );
+        const used = data.reduce((sum, o) => sum + (o.pounds || 0), 0);
 
-      const payAsYouGoCost = used * 1.6;
-      const subscriberCost =
-        used <= subscription.included_lbs
-          ? 0
-          : (used - subscription.included_lbs) *
-            (subscription.extra_rate || 0);
-
-      setUsage({
-        used,
-        remaining,
-        savings: Math.max(payAsYouGoCost - subscriberCost, 0)
-      });
+        setUsage({
+          used,
+          remaining: Math.max((subscription.included_lbs || 0) - used, 0),
+          savings: 0
+        });
+      } catch (err) {
+        console.error('Usage load error:', err);
+      }
     };
 
     loadUsage();
   }, [user?.id, subscription]);
 
   return (
-    <div className="border border-purple-200 rounded p-3 bg-purple-50 space-y-4">
+    <div className="border border-purple-200 rounded p-3 bg-purple-50">
+      <p className="font-semibold text-purple-800 mb-2">
+        {subscription.plan_name}
+      </p>
       <UsageBar
         used={usage.used}
         included={subscription?.included_lbs ?? 0}
       />
-      <OrderChart orders={orders} />
     </div>
   );
 }
 
-/* ===========================
-   USAGE BAR
-=========================== */
 function UsageBar({ used, included }) {
-  const safeIncluded = Math.max(included || 1, 1); // ✅ GUARD
+  const safeIncluded = Math.max(included || 1, 1);
   const percent = Math.min((used / safeIncluded) * 100, 100);
 
   return (
@@ -349,39 +325,6 @@ function UsageBar({ used, included }) {
         className="bg-purple-700 h-4 rounded"
         style={{ width: `${percent}%` }}
       />
-      <span className="absolute inset-0 flex justify-center items-center text-xs text-white font-semibold">
-        {used} lbs / {included} lbs
-      </span>
     </div>
-  );
-}
-
-/* ===========================
-   ORDER CHART
-=========================== */
-function OrderChart({ orders }) {
-  if (!orders || orders.length === 0)
-    return <p className="text-purple-700 text-sm">No orders yet.</p>;
-
-  const max = Math.max(...orders.map((o) => o.pounds || 0), 1); // ✅ GUARD
-
-  return (
-    <svg width="100%" height="120">
-      {orders.slice(0, 6).map((order, i) => {
-        const height = ((order.pounds || 0) / max) * 100;
-
-        return (
-          <rect
-            key={order.id}
-            x={i * 40 + 10}
-            y={110 - height}
-            width="30"
-            height={height}
-            fill="#6b21a8"
-            rx="4"
-          />
-        );
-      })}
-    </svg>
   );
 }
