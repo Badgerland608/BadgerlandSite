@@ -20,11 +20,17 @@ export default function Plans({ user }) {
       }
     );
 
-    if (error) {
-      console.error("Checkout error:", error);
-      alert(error?.message || "Something went wrong starting your subscription.");
-      return;
-    }
+   if (error) {
+  console.error("Edge Function error:", error);
+  alert(error.message || "Something went wrong starting your subscription.");
+  return;
+}
+
+if (data?.error) {
+  console.error("Function returned error:", data.error);
+  alert(data.error);
+  return;
+}
 
     window.location.href = data.url;
   }
