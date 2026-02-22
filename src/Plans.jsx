@@ -2,36 +2,48 @@ import React from "react";
 import { supabase } from "./lib/supabaseClient";
 
 export default function Plans({ user }) {
-
   async function handleSubscribe(plan) {
     if (!user) {
       alert("Please signup to start a subscription plan.");
       return;
     }
 
-    const { data, error } = await supabase.functions.invoke(
-      "create-checkout-session",
+    // Get the user's session + access token
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      alert("You must be logged in to subscribe.");
+      return;
+    }
+
+    // Call the Edge Function manually with Authorization header
+    const res = await fetch(
+      "https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/create-checkout-session",
       {
-        body: {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           basePriceId: plan.basePriceId,
           meteredPriceId: plan.meteredPriceId,
           user_id: user.id,
-        },
+        }),
       }
     );
 
-   if (error) {
-  console.error("Edge Function error:", error);
-  alert(error.message || "Something went wrong starting your subscription.");
-  return;
-}
+    const data = await res.json();
 
-if (data?.error) {
-  console.error("Function returned error:", data.error);
-  alert(data.error);
-  return;
-}
+    if (!res.ok) {
+      console.error("Checkout error:", data);
+      alert(data.error || "Something went wrong starting your subscription.");
+      return;
+    }
 
+    // Redirect to Stripe Checkout
     window.location.href = data.url;
   }
 
@@ -43,8 +55,8 @@ if (data?.error) {
       pickups: "1 pickup",
       bags: "2 free laundry bags",
       price: "$119 / month",
-      basePriceId: "price_1T3OU9B2WXwuC0HNhpy2L1OP",       // your base price
-      meteredPriceId: "price_1T3OgoB2WXwuC0HNjsjgB7BZ",              // replace with your metered price
+      basePriceId: "price_1T3OU9B2WXwuC0HNhpy2L1OP",
+      meteredPriceId: "price_1T3OgoB2WXwuC0HNjsjgB7BZ",
     },
     {
       name: "Family Plan",
