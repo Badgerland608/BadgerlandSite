@@ -5,7 +5,7 @@ export default function Plans({ user }) {
 
   async function handleSubscribe(plan) {
     if (!user) {
-      alert("Please sign in before subscribing.");
+      alert("Please signup to start a subscription plan.");
       return;
     }
 
@@ -22,7 +22,7 @@ export default function Plans({ user }) {
 
     if (error) {
       console.error("Checkout error:", error);
-      alert("Something went wrong starting your subscription.");
+      alert(error?.message || "Something went wrong starting your subscription.");
       return;
     }
 
