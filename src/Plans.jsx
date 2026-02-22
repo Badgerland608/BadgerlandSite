@@ -26,7 +26,7 @@ export default function Plans({ user }) {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+          apikey: import.meta.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1aXZkYWhpZmNtc3liZHlnZ25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NzM2NzYsImV4cCI6MjA4NDM0OTY3Nn0.RWy_cM_cfrYrc0kI6L6BLdwAOVbFzkMJrjKuHAtIM4I,
         },
         body: JSON.stringify({
           basePriceId: plan.basePriceId,
