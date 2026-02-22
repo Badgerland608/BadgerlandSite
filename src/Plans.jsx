@@ -1,3 +1,6 @@
+async function handleSubscribe(plan) {
+  console.log("HANDLE SUBSCRIBE FIRED", plan);
+
 import React from "react";
 import { supabase } from "./lib/supabaseClient";
 
