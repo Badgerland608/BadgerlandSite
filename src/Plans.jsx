@@ -1,11 +1,10 @@
-async function handleSubscribe(plan) {
-  console.log("HANDLE SUBSCRIBE FIRED", plan);
-
 import React from "react";
 import { supabase } from "./lib/supabaseClient";
 
 export default function Plans({ user }) {
   async function handleSubscribe(plan) {
+    console.log("HANDLE SUBSCRIBE FIRED", plan);
+
     if (!user) {
       alert("Please signup to start a subscription plan.");
       return;
@@ -21,7 +20,7 @@ export default function Plans({ user }) {
       return;
     }
 
-    // Call the Edge Function manually with Authorization header
+    // Call the Edge Function manually with Authorization + apikey header
     const res = await fetch(
       "https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/create-checkout-session",
       {
@@ -29,7 +28,8 @@ export default function Plans({ user }) {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1aXZkYWhpZmNtc3liZHlnZ25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NzM2NzYsImV4cCI6MjA4NDM0OTY3Nn0.RWy_cM_cfrYrc0kI6L6BLdwAOVbFzkMJrjKuHAtIM4I,
+          apikey:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1aXZkYWhpZmNtc3liZHlnZ25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NzM2NzYsImV4cCI6MjA4NDM0OTY3Nn0.RWy_cM_cfrYrc0kI6L6BLdwAOVbFzkMJrjKuHAtIM4I",
         },
         body: JSON.stringify({
           basePriceId: plan.basePriceId,
@@ -98,7 +98,8 @@ export default function Plans({ user }) {
       </h1>
 
       <p className="text-center text-gray-600 mb-12 text-lg">
-        Choose a plan that fits your household. All plans include free pickup & delivery.
+        Choose a plan that fits your household. All plans include free pickup &
+        delivery.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center">
