@@ -3,7 +3,7 @@ import { supabase } from "./lib/supabaseClient";
 
 export default function Plans({ user }) {
 
-  async function handleSubscribe(priceId) {
+  async function handleSubscribe(plan) {
     if (!user) {
       alert("Please sign in before subscribing.");
       return;
@@ -13,7 +13,8 @@ export default function Plans({ user }) {
       "create-checkout-session",
       {
         body: {
-          priceId,
+          basePriceId: plan.basePriceId,
+          meteredPriceId: plan.meteredPriceId,
           user_id: user.id,
         },
       }
@@ -28,6 +29,7 @@ export default function Plans({ user }) {
     window.location.href = data.url;
   }
 
+  // ⭐ UPDATED: Each plan now has basePriceId + meteredPriceId
   const plans = [
     {
       name: "Single/Student Plan",
@@ -35,7 +37,8 @@ export default function Plans({ user }) {
       pickups: "1 pickup",
       bags: "2 free laundry bags",
       price: "$119 / month",
-      priceId: "price_1T3OU9B2WXwuC0HNhpy2L1OP", // ← replace with your real Stripe price ID
+      basePriceId: "price_1T3OU9B2WXwuC0HNhpy2L1OP",       // your base price
+      meteredPriceId: "price_1T3OgoB2WXwuC0HNjsjgB7BZ",              // replace with your metered price
     },
     {
       name: "Family Plan",
@@ -43,7 +46,8 @@ export default function Plans({ user }) {
       pickups: "2 pickups",
       bags: "2 free laundry bags",
       price: "$239 / month",
-      priceId: "price_1T3OUHB2WXwuC0HNnRZcqih2", // ← replace with your real Stripe price ID
+      basePriceId: "price_1T3OUHB2WXwuC0HNnRZcqih2",
+      meteredPriceId: "price_1T3OgsB2WXwuC0HNBXflcgfJ",
     },
     {
       name: "Household Plan",
@@ -51,7 +55,8 @@ export default function Plans({ user }) {
       pickups: "3 pickups",
       bags: "3 free laundry bags",
       price: "$299 / month",
-      priceId: "price_1T3OUOB2WXwuC0HNadqqEet1", // ← replace with your real Stripe price ID
+      basePriceId: "price_1T3OUOB2WXwuC0HNadqqEet1",
+      meteredPriceId: "price_1T3OgwB2WXwuC0HNWYANsPYH",
     },
     {
       name: "Ultra Household Plan",
@@ -59,7 +64,8 @@ export default function Plans({ user }) {
       pickups: "4 pickups",
       bags: "4 free laundry bags",
       price: "$349 / month",
-      priceId: "price_1T3OUWB2WXwuC0HNMWa7QhTR", // ← replace with your real Stripe price ID
+      basePriceId: "price_1T3OUWB2WXwuC0HNMWa7QhTR",
+      meteredPriceId: "price_1T3OgzB2WXwuC0HNbfceKljV",
     },
   ];
 
@@ -104,7 +110,7 @@ export default function Plans({ user }) {
             </p>
 
             <button
-              onClick={() => handleSubscribe(plan.priceId)}
+              onClick={() => handleSubscribe(plan)}
               className="
                 mt-6 text-white text-center py-2.5 rounded-xl font-semibold
                 bg-gradient-to-r from-[#804FB3] to-[#56941E]
