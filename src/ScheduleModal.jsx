@@ -39,7 +39,33 @@ export default function ScheduleModal({ setShowModal, user }) {
   const tomorrow = new Date();
   tomorrow.setDate(today.getDate() + 1);
 
-  // Load profile + subscription
+  /* ============================================================
+     ⭐ Helper: Get next occurrence of a weekday
+  ============================================================ */
+  function getNextDate(dayName) {
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const targetIndex = days.indexOf(dayName);
+    if (targetIndex === -1) return null;
+
+    const result = new Date();
+    const currentIndex = result.getDay();
+
+    let diff = targetIndex - currentIndex;
+    if (diff <= 0) diff += 7;
+
+    result.setDate(result.getDate() + diff);
+
+    // Ensure it's at least tomorrow
+    if (result <= tomorrow) {
+      result.setDate(result.getDate() + 7);
+    }
+
+    return result;
+  }
+
+  /* ============================================================
+     Load profile + subscription
+  ============================================================ */
   useEffect(() => {
     const loadProfile = async () => {
       if (!user) return;
@@ -53,7 +79,7 @@ export default function ScheduleModal({ setShowModal, user }) {
       const email = user.email || '';
 
       if (profile) {
-        setFormData((prev) => ({
+        setFormData(prev => ({
           ...prev,
           fullName: profile.full_name || '',
           phone: profile.phone || '',
@@ -61,7 +87,7 @@ export default function ScheduleModal({ setShowModal, user }) {
           email
         }));
       } else {
-        setFormData((prev) => ({ ...prev, email }));
+        setFormData(prev => ({ ...prev, email }));
       }
 
       // Load subscription
@@ -72,13 +98,27 @@ export default function ScheduleModal({ setShowModal, user }) {
         .eq('active', true)
         .single();
 
-      if (sub) setSubscription(sub);
+      if (sub) {
+        setSubscription(sub);
+
+        // ⭐ Auto-fill subscriber weekly preferences
+        if (sub.pickup_day) {
+          const next = getNextDate(sub.pickup_day);
+          if (next) setSelectedDate(next);
+        }
+
+        if (sub.pickup_time) {
+          setSelectedTime(sub.pickup_time);
+        }
+      }
     };
 
     loadProfile();
   }, [user]);
 
-  // Load slot counts when date changes
+  /* ============================================================
+     Load slot counts when date changes
+  ============================================================ */
   useEffect(() => {
     if (!selectedDate) return;
 
@@ -96,7 +136,7 @@ export default function ScheduleModal({ setShowModal, user }) {
       }
 
       const counts = {};
-      data.forEach((order) => {
+      data.forEach(order => {
         counts[order.pickup_time] = (counts[order.pickup_time] || 0) + 1;
       });
 
@@ -108,6 +148,9 @@ export default function ScheduleModal({ setShowModal, user }) {
 
   const isSlotFull = (slot) => (slotCounts[slot] || 0) >= MAX_PER_SLOT;
 
+  /* ============================================================
+     Handle form changes
+  ============================================================ */
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -122,7 +165,7 @@ export default function ScheduleModal({ setShowModal, user }) {
       const lbsPerBag = 15;
       const totalLbs = bagsNum * lbsPerBag;
 
-      let estimate = 24; // base price
+      let estimate = 24;
 
       if (subscription) {
         const included = subscription.included_lbs;
@@ -142,7 +185,7 @@ export default function ScheduleModal({ setShowModal, user }) {
 
     setFormData(updated);
 
-    // Required fields change depending on subscription
+    // Required fields
     const requiredFields = subscription
       ? ["fullName", "address", "phone", "email", "detergent", "notificationPreference", "bags"]
       : ["fullName", "address", "phone", "email", "service", "detergent", "notificationPreference", "bags"];
@@ -154,6 +197,9 @@ export default function ScheduleModal({ setShowModal, user }) {
     setFormComplete(isComplete);
   };
 
+  /* ============================================================
+     Submit
+  ============================================================ */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -200,6 +246,9 @@ export default function ScheduleModal({ setShowModal, user }) {
     setShowModal(false);
   };
 
+  /* ============================================================
+     UI
+  ============================================================ */
   return (
     <div className="fixed inset-0 flex justify-center items-center z-[3000] px-2 sm:px-4">
       <div className="bg-white rounded-xl w-full max-w-sm shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6 relative">
@@ -218,7 +267,7 @@ export default function ScheduleModal({ setShowModal, user }) {
         {/* ⭐ Non-subscriber banner */}
         {!subscription && (
           <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-sm mb-4 text-center">
-            You are not a subscriber.  
+            You are not a subscriber.
             <a href="/plans" className="underline text-purple-700 font-semibold ml-1">
               View subscription plans
             </a>
@@ -229,8 +278,11 @@ export default function ScheduleModal({ setShowModal, user }) {
 
           {/* Profile fields */}
           <input type="text" name="fullName" placeholder="Full Name" value={formData.fullName} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
+
           <input type="text" name="address" placeholder="Pickup Address" value={formData.address} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
+
           <input type="tel" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
+
           <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} className="w-full p-2 border border-purple-300 rounded" required />
 
           {/* ⭐ Hide service selection for subscribers */}

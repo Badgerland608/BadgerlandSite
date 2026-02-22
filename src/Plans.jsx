@@ -1,6 +1,68 @@
 import React from "react";
+import { supabase } from "./lib/supabaseClient";
 
-export default function Plans() {
+export default function Plans({ user }) {
+
+  async function handleSubscribe(priceId) {
+    if (!user) {
+      alert("Please sign in before subscribing.");
+      return;
+    }
+
+    const { data, error } = await supabase.functions.invoke(
+      "create-checkout-session",
+      {
+        body: {
+          priceId,
+          user_id: user.id,
+        },
+      }
+    );
+
+    if (error) {
+      console.error("Checkout error:", error);
+      alert("Something went wrong starting your subscription.");
+      return;
+    }
+
+    window.location.href = data.url;
+  }
+
+  const plans = [
+    {
+      name: "Single/Student Plan",
+      lbs: "80 lbs",
+      pickups: "1 pickup",
+      bags: "2 free laundry bags",
+      price: "$119 / month",
+      priceId: "price_1T3OU9B2WXwuC0HNhpy2L1OP", // ← replace with your real Stripe price ID
+    },
+    {
+      name: "Family Plan",
+      lbs: "200 lbs",
+      pickups: "2 pickups",
+      bags: "2 free laundry bags",
+      price: "$239 / month",
+      priceId: "price_1T3OUHB2WXwuC0HNnRZcqih2", // ← replace with your real Stripe price ID
+    },
+    {
+      name: "Household Plan",
+      lbs: "260 lbs",
+      pickups: "3 pickups",
+      bags: "3 free laundry bags",
+      price: "$299 / month",
+      priceId: "price_1T3OUOB2WXwuC0HNadqqEet1", // ← replace with your real Stripe price ID
+    },
+    {
+      name: "Ultra Household Plan",
+      lbs: "320 lbs",
+      pickups: "4 pickups",
+      bags: "4 free laundry bags",
+      price: "$349 / month",
+      priceId: "price_1T3OUWB2WXwuC0HNMWa7QhTR", // ← replace with your real Stripe price ID
+    },
+  ];
+
   return (
     <div className="max-w-6xl mx-auto p-6">
       <h1 className="text-4xl font-extrabold text-[#804FB3] text-center mb-6 tracking-tight">
@@ -12,48 +74,14 @@ export default function Plans() {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center">
-
-        {[
-          {
-            name: "Single/Student Plan",
-            lbs: "80 lbs",
-            pickups: "1 pickup",
-            bags: "2 free laundry bags",
-            price: "$119 / month",
-            link: "https://buy.stripe.com/7sY9ASeuY83n5n55AX0Jq06",
-          },
-          {
-            name: "Family Plan",
-            lbs: "200 lbs",
-            pickups: "2 pickups",
-            bags: "2 free laundry bags",
-            price: "$239 / month",
-            link: "https://buy.stripe.com/eVqcN4cmQ5Vf4j15AX0Jq07",
-          },
-          {
-            name: "Household Plan",
-            lbs: "260 lbs",
-            pickups: "3 pickups",
-            bags: "3 free laundry bags",
-            price: "$299 / month",
-            link: "https://buy.stripe.com/fZu14maeI1EZ2aTe7t0Jq08",
-          },
-          {
-            name: "Ultra Household Plan",
-            lbs: "320 lbs",
-            pickups: "4 pickups",
-            bags: "4 free laundry bags",
-            price: "$349 / month",
-            link: "https://buy.stripe.com/fZucN4fz2bfzdTB0gD0Jq09",
-          },
-        ].map((plan, i) => (
+        {plans.map((plan, i) => (
           <div
             key={i}
             className="
               w-full rounded-2xl p-7 flex flex-col
               border border-[#CFCFCF]
               shadow-lg
-              bg-gradient-to-b from-[#FFFFFF] to-[#E5E4E2]   /* Platinum gradient */
+              bg-gradient-to-b from-[#FFFFFF] to-[#E5E4E2]
               hover:shadow-2xl hover:-translate-y-1 transition-all duration-300
             "
           >
@@ -61,7 +89,6 @@ export default function Plans() {
               {plan.name}
             </h2>
 
-            {/* Green accent divider */}
             <div className="h-1 w-16 bg-[#56941E] mx-auto rounded-full mb-4"></div>
 
             <div className="text-gray-700 space-y-1 text-center">
@@ -76,8 +103,8 @@ export default function Plans() {
               {plan.price}
             </p>
 
-            <a
-              href={plan.link}
+            <button
+              onClick={() => handleSubscribe(plan.priceId)}
               className="
                 mt-6 text-white text-center py-2.5 rounded-xl font-semibold
                 bg-gradient-to-r from-[#804FB3] to-[#56941E]
@@ -85,7 +112,7 @@ export default function Plans() {
               "
             >
               Subscribe
-            </a>
+            </button>
           </div>
         ))}
       </div>

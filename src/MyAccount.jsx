@@ -13,6 +13,10 @@ export default function MyAccount({ user, setShowAccount }) {
   const [orders, setOrders] = useState([]);
   const [subscription, setSubscription] = useState(null);
 
+  // ⭐ NEW — subscriber weekly pickup preferences
+  const [pickupDay, setPickupDay] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
+
   const [notifySettings, setNotifySettings] = useState({
     email_enabled: true,
     sms_enabled: false,
@@ -26,7 +30,7 @@ export default function MyAccount({ user, setShowAccount }) {
 
   /* ===========================
      MOUNT / UNMOUNT SAFETY
-  =========================== */
+  ============================ */
   useEffect(() => {
     isMounted.current = true;
     return () => {
@@ -36,7 +40,7 @@ export default function MyAccount({ user, setShowAccount }) {
 
   /* ===========================
      RESET STATE ON LOGOUT
-  =========================== */
+  ============================ */
   useEffect(() => {
     if (!user?.id) {
       if (!isMounted.current) return;
@@ -45,18 +49,22 @@ export default function MyAccount({ user, setShowAccount }) {
       setProfile({ full_name: '', phone: '', address: '' });
       setOrders([]);
       setSubscription(null);
+      setPickupDay("");
+      setPickupTime("");
+
       setNotifySettings({
         email_enabled: true,
         sms_enabled: false,
         phone: ''
       });
+
       setLoading(false);
     }
   }, [user?.id]);
 
   /* ===========================
      LOAD ACCOUNT DATA
-  =========================== */
+  ============================ */
   useEffect(() => {
     if (!user?.id) return;
 
@@ -91,6 +99,10 @@ export default function MyAccount({ user, setShowAccount }) {
 
         if (!cancelled && isMounted.current) {
           setSubscription(subData || null);
+
+          // ⭐ Load subscriber weekly preferences
+          setPickupDay(subData?.pickup_day || "");
+          setPickupTime(subData?.pickup_time || "");
         }
 
         /* NOTIFICATION SETTINGS */
@@ -138,7 +150,7 @@ export default function MyAccount({ user, setShowAccount }) {
 
   /* ===========================
      FORM HANDLERS
-  =========================== */
+  ============================ */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
@@ -157,6 +169,7 @@ export default function MyAccount({ user, setShowAccount }) {
     if (!user?.id) return;
 
     setSaving(true);
+
     try {
       await supabase.from('profiles').upsert({
         id: user.id,
@@ -179,8 +192,30 @@ export default function MyAccount({ user, setShowAccount }) {
   };
 
   /* ===========================
+     ⭐ SAVE SUBSCRIBER PREFERENCES
+  ============================ */
+  async function savePreferences() {
+    if (!subscription) return;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({
+        pickup_day: pickupDay,
+        pickup_time: pickupTime
+      })
+      .eq("user_id", user.id);
+
+    if (error) {
+      alert("Error saving preferences");
+      console.error(error);
+    } else {
+      alert("Preferences saved!");
+    }
+  }
+
+  /* ===========================
      UI
-  =========================== */
+  ============================ */
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-2 sm:px-4">
       <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -223,7 +258,7 @@ export default function MyAccount({ user, setShowAccount }) {
                   placeholder="Full Name"
                 />
 
-              <input
+                <input
                   name="email_address"
                   value={profile.email_address}
                   onChange={handleChange}
@@ -257,10 +292,56 @@ export default function MyAccount({ user, setShowAccount }) {
             )}
 
             {activeTab === 'subscription' && subscription && (
-              <SubscriptionDashboard
-                user={user}
-                subscription={subscription}
-              />
+              <>
+                <SubscriptionDashboard user={user} subscription={subscription} />
+
+                {/* ⭐ NEW — Weekly Pickup Preferences */}
+                <div className="mt-6 p-4 border rounded-lg bg-purple-50">
+                  <h3 className="text-lg font-semibold text-purple-800 mb-3">
+                    Weekly Pickup Preferences
+                  </h3>
+
+                  <label className="block text-sm font-medium text-purple-700">
+                    Pickup Day
+                  </label>
+                  <select
+                    value={pickupDay}
+                    onChange={(e) => setPickupDay(e.target.value)}
+                    className="w-full p-2 border border-purple-300 rounded mb-3"
+                  >
+                    <option value="">Select a day</option>
+                    {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => (
+                      <option key={day} value={day}>{day}</option>
+                    ))}
+                  </select>
+
+                  <label className="block text-sm font-medium text-purple-700">
+                    Pickup Time Window
+                  </label>
+                  <select
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                    className="w-full p-2 border border-purple-300 rounded mb-3"
+                  >
+                    <option value="">Select a time</option>
+                    {[
+                      "8:00 AM - 10:00 AM",
+                      "10:30 AM - 12:30 PM",
+                      "1:00 PM - 3:00 PM",
+                      "4:00 PM - 6:00 PM",
+                    ].map((slot) => (
+                      <option key={slot} value={slot}>{slot}</option>
+                    ))}
+                  </select>
+
+                  <button
+                    onClick={savePreferences}
+                    className="w-full bg-purple-700 text-white py-2 rounded font-semibold"
+                  >
+                    Save Preferences
+                  </button>
+                </div>
+              </>
             )}
 
             {activeTab === 'orders' && (
@@ -297,7 +378,6 @@ export default function MyAccount({ user, setShowAccount }) {
 /* ===========================
    SUBSCRIPTION DASHBOARD
 =========================== */
-
 function SubscriptionDashboard({ user, subscription }) {
   const [usage, setUsage] = useState({
     used: 0,
@@ -350,6 +430,7 @@ function SubscriptionDashboard({ user, subscription }) {
       <p className="font-semibold text-purple-800 mb-2">
         {subscription.plan_name}
       </p>
+
       <UsageBar
         used={usage.used}
         included={subscription?.included_lbs ?? 0}
