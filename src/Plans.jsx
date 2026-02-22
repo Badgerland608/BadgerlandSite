@@ -1,57 +1,45 @@
-import React from "react";
+import React, { useState } from "react";
 import { supabase } from "./lib/supabaseClient";
 
 export default function Plans({ user }) {
-  async function handleSubscribe(plan) {
-    console.log("HANDLE SUBSCRIBE FIRED", plan);
+  const [loadingPlan, setLoadingPlan] = useState(null);
 
+  async function handleSubscribe(plan) {
     if (!user) {
       alert("Please signup to start a subscription plan.");
       return;
     }
 
-    // Get the user's session + access token
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    setLoadingPlan(plan.basePriceId);
 
-    if (!session) {
-      alert("You must be logged in to subscribe.");
-      return;
-    }
-
-    // Call the Edge Function manually with Authorization + apikey header
-    const res = await fetch(
-      "https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/create-checkout-session",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1aXZkYWhpZmNtc3liZHlnZ25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3NzM2NzYsImV4cCI6MjA4NDM0OTY3Nn0.RWy_cM_cfrYrc0kI6L6BLdwAOVbFzkMJrjKuHAtIM4I",
-        },
-        body: JSON.stringify({
+    try {
+      // .invoke() automatically attaches the current session's JWT 
+      // and your project's anon key for you.
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: {
           basePriceId: plan.basePriceId,
           meteredPriceId: plan.meteredPriceId,
           user_id: user.id,
-        }),
+          customerEmail: user.email,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        // Redirect the user to the Stripe-hosted checkout page
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned from the server.");
       }
-    );
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Checkout error:", data);
-      alert(data.error || "Something went wrong starting your subscription.");
-      return;
+    } catch (err) {
+      console.error("Checkout Error:", err);
+      alert(err.message || "Something went wrong starting your subscription.");
+    } finally {
+      setLoadingPlan(null);
     }
-
-    // Redirect to Stripe Checkout
-    window.location.href = data.url;
   }
 
-  // ⭐ UPDATED: Each plan now has basePriceId + meteredPriceId
   const plans = [
     {
       name: "Single/Student Plan",
@@ -98,8 +86,7 @@ export default function Plans({ user }) {
       </h1>
 
       <p className="text-center text-gray-600 mb-12 text-lg">
-        Choose a plan that fits your household. All plans include free pickup &
-        delivery.
+        Choose a plan that fits your household. All plans include free pickup & delivery.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center">
@@ -120,7 +107,7 @@ export default function Plans({ user }) {
 
             <div className="h-1 w-16 bg-[#56941E] mx-auto rounded-full mb-4"></div>
 
-            <div className="text-gray-700 space-y-1 text-center">
+            <div className="text-gray-700 space-y-1 text-center flex-grow">
               <p>• {plan.lbs} included per month</p>
               <p>• {plan.pickups} per month</p>
               <p>• Priority scheduling</p>
@@ -134,13 +121,15 @@ export default function Plans({ user }) {
 
             <button
               onClick={() => handleSubscribe(plan)}
-              className="
+              disabled={loadingPlan === plan.basePriceId}
+              className={`
                 mt-6 text-white text-center py-2.5 rounded-xl font-semibold
                 bg-gradient-to-r from-[#804FB3] to-[#56941E]
                 hover:opacity-90 transition shadow-md
-              "
+                ${loadingPlan === plan.basePriceId ? 'opacity-50 cursor-not-allowed' : ''}
+              `}
             >
-              Subscribe
+              {loadingPlan === plan.basePriceId ? "Loading..." : "Subscribe"}
             </button>
           </div>
         ))}
