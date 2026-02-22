@@ -8,5 +8,8 @@
     "read": ["*"],
     "write": ["*"],
     "invoke": ["*"]
+  },
+  "security": {
+    "allowedRoles": ["anon", "authenticated"]
   }
 }
