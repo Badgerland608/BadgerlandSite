@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabaseClient";
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ user }) {
+
+  // ⭐ Prevent mount before user is ready
+  if (!user) return null;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -61,6 +65,7 @@ export default function AdminDashboard() {
           .order("created_at", { ascending: false });
 
         setOrders(allOrders || []);
+
       } catch (err) {
         setError(err.message);
       }
@@ -88,6 +93,7 @@ export default function AdminDashboard() {
       );
 
       alert("Order updated and customer notified.");
+
     } catch (err) {
       alert("Error updating order: " + err.message);
     }
@@ -125,6 +131,7 @@ export default function AdminDashboard() {
       setShowWeightModal(false);
       setWeightInput("");
       setWeightOrder(null);
+
     } catch (err) {
       alert("Error saving weight: " + err.message);
     }
@@ -257,6 +264,7 @@ export default function AdminDashboard() {
       {showWeightModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-xl w-80 border border-[#CFCFCF]">
+
             <h3 className="text-lg font-bold mb-4 text-[#804FB3]">
               Enter Laundry Weight
             </h3>
@@ -284,6 +292,7 @@ export default function AdminDashboard() {
                 Save Weight
               </button>
             </div>
+
           </div>
         </div>
       )}

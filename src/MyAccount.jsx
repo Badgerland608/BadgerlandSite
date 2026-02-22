@@ -2,12 +2,17 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from './lib/supabaseClient';
 
 export default function MyAccount({ user, setShowAccount }) {
+
+  // ⭐ Prevent mount before user is ready
+  if (!user) return null;
+
   const [activeTab, setActiveTab] = useState('profile');
 
   const [profile, setProfile] = useState({
     full_name: '',
     phone: '',
-    address: ''
+    address: '',
+    email_address: ''
   });
 
   const [orders, setOrders] = useState([]);
@@ -46,7 +51,7 @@ export default function MyAccount({ user, setShowAccount }) {
       if (!isMounted.current) return;
 
       setActiveTab('profile');
-      setProfile({ full_name: '', phone: '', address: '' });
+      setProfile({ full_name: '', phone: '', address: '', email_address: '' });
       setOrders([]);
       setSubscription(null);
       setPickupDay("");
@@ -77,7 +82,7 @@ export default function MyAccount({ user, setShowAccount }) {
         /* PROFILE */
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('full_name, phone, address')
+          .select('full_name, phone, address, email_address')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -85,7 +90,8 @@ export default function MyAccount({ user, setShowAccount }) {
           setProfile({
             full_name: profileData?.full_name || '',
             phone: profileData?.phone || '',
-            address: profileData?.address || ''
+            address: profileData?.address || '',
+            email_address: profileData?.email_address || ''
           });
         }
 
@@ -132,6 +138,7 @@ export default function MyAccount({ user, setShowAccount }) {
         if (!cancelled && isMounted.current) {
           setOrders(ordersData || []);
         }
+
       } catch (err) {
         console.error('MyAccount load error:', err);
       } finally {
@@ -175,7 +182,8 @@ export default function MyAccount({ user, setShowAccount }) {
         id: user.id,
         full_name: profile.full_name,
         phone: profile.phone,
-        address: profile.address
+        address: profile.address,
+        email_address: profile.email_address
       });
 
       await supabase.from('notification_settings').upsert({
@@ -184,6 +192,7 @@ export default function MyAccount({ user, setShowAccount }) {
         sms_enabled: notifySettings.sms_enabled,
         phone: notifySettings.phone
       });
+
     } catch (err) {
       console.error('Save error:', err);
     } finally {
@@ -219,6 +228,7 @@ export default function MyAccount({ user, setShowAccount }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 px-2 sm:px-4">
       <div className="bg-white rounded-xl w-full max-w-2xl shadow-xl border border-purple-300 max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+
         <h2 className="text-2xl font-bold mb-4 text-purple-800 text-center">
           My Account
         </h2>
@@ -379,6 +389,10 @@ export default function MyAccount({ user, setShowAccount }) {
    SUBSCRIPTION DASHBOARD
 =========================== */
 function SubscriptionDashboard({ user, subscription }) {
+
+  // ⭐ Prevent mount before data is ready
+  if (!user || !subscription) return null;
+
   const [usage, setUsage] = useState({
     used: 0,
     remaining: subscription?.included_lbs ?? 0,
@@ -413,6 +427,7 @@ function SubscriptionDashboard({ user, subscription }) {
           remaining: Math.max((subscription.included_lbs || 0) - used, 0),
           savings: 0
         });
+
       } catch (err) {
         console.error('Usage load error:', err);
       }
