@@ -4,7 +4,8 @@ import {
   Routes,
   Route,
   useLocation,
-  Link
+  Link,
+  Navigate
 } from "react-router-dom";
 
 import Header from './Header';
@@ -24,10 +25,6 @@ import About from "./About";
 import Residential from "./Residential";
 import Commercial from "./Commercial";
 import { supabase } from './lib/supabaseClient';
-
-/* ===========================
-ROOT APP — AUTH LIVES HERE
-=========================== */
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -51,14 +48,14 @@ export default function App() {
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
 
-        const authUser = session?.user ?? null;
-        setUser(authUser);
-
-        if (!authUser) {
-          setIsAdmin(false);
+        if (!session?.user) {
+          setUser(null);
+          setLoadingUser(false);
           return;
         }
 
+        const authUser = session.user;
+        setUser(authUser);
         await ensureUserRows(authUser.id);
 
         const { data: profile } = await supabase
@@ -67,12 +64,9 @@ export default function App() {
           .eq('id', authUser.id)
           .maybeSingle();
 
-        if (mounted) {
-          setIsAdmin(profile?.is_admin === true);
-        }
+        if (mounted) setIsAdmin(profile?.is_admin === true);
       } catch (err) {
-        console.error('loadInitialSession error:', err);
-        if (mounted) setIsAdmin(false);
+        console.error('Initial load error:', err);
       } finally {
         if (mounted) setLoadingUser(false);
       }
@@ -80,81 +74,61 @@ export default function App() {
 
     loadInitialSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!mounted) return;
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
 
-        const authUser = session?.user ?? null;
-        setUser(authUser);
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAdmin(false);
         setLoadingUser(false);
-
-        if (!authUser) {
-          setIsAdmin(false);
-          return;
-        }
-
-        try {
-          await ensureUserRows(authUser.id);
-
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', authUser.id)
-            .maybeSingle();
-
-          if (mounted) {
-            setIsAdmin(profile?.is_admin === true);
-          }
-        } catch (err) {
-          console.error('onAuthStateChange profile load error:', err);
-          if (mounted) setIsAdmin(false);
-        }
+        // Force clean redirect to home on logout
+        window.location.href = "/"; 
+        return;
       }
-    );
+
+      if (session?.user) {
+        setUser(session.user);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (mounted) setIsAdmin(profile?.is_admin === true);
+      }
+      
+      setLoadingUser(false);
+    });
 
     return () => {
       mounted = false;
-      listener?.subscription?.unsubscribe?.();
+      authListener?.subscription.unsubscribe();
     };
   }, []);
 
   if (loadingUser) {
-    return <div className="p-10 text-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-800"></div>
+      </div>
+    );
   }
 
   return (
     <Router>
-      <AppContent
-        user={user}
-        isAdmin={isAdmin}
-      />
+      <AppContent user={user} isAdmin={isAdmin} />
     </Router>
   );
 }
 
-/* ===========================
-APP CONTENT — UI ONLY
-=========================== */
-
 function AppContent({ user, isAdmin }) {
   const location = useLocation();
-
   const [showModal, setShowModal] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Close account panel when navigating
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
-
-  // Close account/admin panels when user logs out
-  useEffect(() => {
-    if (!user) {
-      setShowAccount(false);
-      setShowAdmin(false);
-    }
-  }, [user]);
 
   return (
     <div className="relative z-0">
@@ -167,53 +141,31 @@ function AppContent({ user, isAdmin }) {
       />
 
       {showAdmin && isAdmin ? (
-        <>
-          <div className="p-4">
-            <button
-              onClick={() => setShowAdmin(false)}
-              className="px-3 py-1 rounded bg-purple-700 text-white text-sm"
-            >
-              Back to site
-            </button>
-          </div>
-
-          <AdminDashboard user={user} />
-        </>
+        <AdminDashboard user={user} setShowAdmin={setShowAdmin} />
       ) : (
         <>
           <Routes>
             <Route path="/" element={<HomeView />} />
             <Route path="/plans" element={<Plans user={user} />} />
-            
-            {/* Success and Cancel routes for Stripe Redirect */}
             <Route path="/success" element={<SuccessPage />} />
             <Route path="/cancel" element={<Plans user={user} />} />
-
             <Route path="/about" element={<About />} />
             <Route path="/residential" element={<Residential />} />
             <Route path="/commercial" element={<Commercial />} />
+            {/* Fallback for unknown routes */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
-
           <footer className="bg-purple-900 text-white text-center py-3">
             Badgerland Laundry LLC
           </footer>
         </>
       )}
 
-      {showModal && (
-        <ScheduleModal setShowModal={setShowModal} user={user} />
-      )}
-
-      {showAccount && user && (
-        <MyAccount user={user} setShowAccount={setShowAccount} />
-      )}
+      {showModal && <ScheduleModal setShowModal={setShowModal} user={user} />}
+      {showAccount && user && <MyAccount user={user} setShowAccount={setShowAccount} />}
     </div>
   );
 }
-
-/* ===========================
-SUB-VIEWS FOR CLEAN ROUTING
-=========================== */
 
 function HomeView() {
   return (
@@ -222,22 +174,12 @@ function HomeView() {
       <Intro />
       <HowItWorks />
       <Rates />
-
       <div className="text-center my-10 px-4">
-        <h2 className="text-2xl font-bold text-purple-800 mb-2">
-          Want to save money on every pickup?
-        </h2>
-        <p className="text-purple-700 mb-4">
-          Become a member and enjoy included pounds, discounted rates, and priority service.
-        </p>
-        <Link
-          to="/plans"
-          className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block"
-        >
+        <h2 className="text-2xl font-bold text-purple-800 mb-2">Want to save money?</h2>
+        <Link to="/plans" className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block transition hover:bg-purple-800">
           View Subscription Plans
         </Link>
       </div>
-
       <ServiceArea />
       <WhyChooseUs />
       <FAQ />
@@ -248,21 +190,16 @@ function HomeView() {
 
 function SuccessPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center animate-in fade-in duration-700">
       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
         <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
         </svg>
       </div>
       <h1 className="text-4xl font-bold text-purple-900 mb-4">Subscription Confirmed!</h1>
-      <p className="text-lg text-gray-600 mb-8 max-w-md">
-        Welcome to Badgerland Laundry! Your account has been updated and your subscription is now active.
-      </p>
-      <Link 
-        to="/" 
-        className="bg-purple-700 text-white px-8 py-3 rounded-full font-bold hover:bg-purple-800 transition shadow-lg"
-      >
-        Go to Home
+      <p className="text-lg text-gray-600 mb-8 max-w-md">Welcome! Your account is updated and your plan is active.</p>
+      <Link to="/" className="bg-purple-700 text-white px-8 py-3 rounded-full font-bold hover:bg-purple-800 transition shadow-lg">
+        Return Home
       </Link>
     </div>
   );
