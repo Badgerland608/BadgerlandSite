@@ -48,7 +48,7 @@ export default function Plans({ user }) {
       bags: "2 free laundry bags",
       price: "$119 / month",
       basePriceId: "price_1T3OU9B2WXwuC0HNhpy2L1OP",
-      meteredPriceId: "price_1T3OgoB2WXwuC0HNjsjgB7BZ",
+      meteredPriceId: "price_1T3nQvB2WXwuC0HNnzE2lP7W",
     },
     {
       name: "Family Plan",
@@ -57,7 +57,7 @@ export default function Plans({ user }) {
       bags: "2 free laundry bags",
       price: "$239 / month",
       basePriceId: "price_1T3OUHB2WXwuC0HNnRZcqih2",
-      meteredPriceId: "price_1T3OgsB2WXwuC0HNBXflcgfJ",
+      meteredPriceId: "price_1T3nUtB2WXwuC0HNnWJkgeSN",
     },
     {
       name: "Household Plan",
@@ -66,7 +66,7 @@ export default function Plans({ user }) {
       bags: "3 free laundry bags",
       price: "$299 / month",
       basePriceId: "price_1T3OUOB2WXwuC0HNadqqEet1",
-      meteredPriceId: "price_1T3OgwB2WXwuC0HNWYANsPYH",
+      meteredPriceId: "price_1T3nWJB2WXwuC0HNuCLz9CGI",
     },
     {
       name: "Ultra Household Plan",
@@ -75,7 +75,7 @@ export default function Plans({ user }) {
       bags: "4 free laundry bags",
       price: "$349 / month",
       basePriceId: "price_1T3OUWB2WXwuC0HNMWa7QhTR",
-      meteredPriceId: "price_1T3OgzB2WXwuC0HNbfceKljV",
+      meteredPriceId: "price_1T3nY4B2WXwuC0HN6a9aELDW",
     },
   ];
 
