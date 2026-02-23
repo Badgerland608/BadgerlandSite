@@ -31,6 +31,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  // Helper to ensure database rows exist for new/returning users
   async function ensureUserRows(userId) {
     try {
       await supabase.rpc('ensure_profile', { uid: userId });
@@ -43,24 +44,24 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
-    const loadInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!mounted) return;
-      handleSession(session);
-    };
-
+    // Centralized session handler to prevent "Zombie" states
     const handleSession = async (session) => {
       if (!session?.user) {
-        setUser(null);
-        setIsAdmin(false);
-        setLoadingUser(false);
+        if (mounted) {
+          setUser(null);
+          setIsAdmin(false);
+          setLoadingUser(false);
+        }
         return;
       }
 
       const authUser = session.user;
       setUser(authUser);
+      
+      // Sync DB rows
       await ensureUserRows(authUser.id);
 
+      // Check Admin Status
       const { data: profile } = await supabase
         .from('profiles')
         .select('is_admin')
@@ -73,32 +74,32 @@ export default function App() {
       }
     };
 
-    loadInitialSession();
+    // 1. Load initial session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSession(session);
+    });
 
-    // 🟢 AUTH LISTENER
+    // 2. Listen for Auth Changes (Login, Logout, Token Refresh)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth Event:", event);
-      if (!mounted) return;
-
+      
       if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAdmin(false);
-        // Force clean redirect to home on logout
-        window.location.href = "/"; 
-        return;
-      }
-
-      // Handle sign in or token refresh (vital after redirects)
-      if (session) {
+        if (mounted) {
+          setUser(null);
+          setIsAdmin(false);
+          // Redirect to home to clear any protected state
+          window.location.href = "/"; 
+        }
+      } else if (session) {
         handleSession(session);
       }
     });
 
-    // 🟢 VISIBILITY CHECK: Re-sync when user returns from Stripe tab
+    // 3. Visibility Check: Sync session when user returns from Stripe/External tabs
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) handleSession(session);
+          handleSession(session);
         });
       }
     };
@@ -109,39 +110,6 @@ export default function App() {
       mounted = false;
       authListener?.subscription.unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
-
-    loadInitialSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAdmin(false);
-        setLoadingUser(false);
-        // Force clean redirect to home on logout
-        window.location.href = "/"; 
-        return;
-      }
-
-      if (session?.user) {
-        setUser(session.user);
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        if (mounted) setIsAdmin(profile?.is_admin === true);
-      }
-      
-      setLoadingUser(false);
-    });
-
-    return () => {
-      mounted = false;
-      authListener?.subscription.unsubscribe();
     };
   }, []);
 
@@ -166,6 +134,7 @@ function AppContent({ user, isAdmin }) {
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
+  // Close account sidebar on navigation
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
@@ -192,7 +161,6 @@ function AppContent({ user, isAdmin }) {
             <Route path="/about" element={<About />} />
             <Route path="/residential" element={<Residential />} />
             <Route path="/commercial" element={<Commercial />} />
-            {/* Fallback for unknown routes */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
           <footer className="bg-purple-900 text-white text-center py-3">
@@ -216,7 +184,10 @@ function HomeView() {
       <Rates />
       <div className="text-center my-10 px-4">
         <h2 className="text-2xl font-bold text-purple-800 mb-2">Want to save money?</h2>
-        <Link to="/plans" className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block transition hover:bg-purple-800">
+        <Link 
+          to="/plans" 
+          className="bg-purple-700 text-white px-6 py-3 rounded-full font-semibold inline-block transition hover:bg-purple-800 shadow-md"
+        >
           View Subscription Plans
         </Link>
       </div>
@@ -229,6 +200,12 @@ function HomeView() {
 }
 
 function SuccessPage() {
+  useEffect(() => {
+    // Explicitly refresh session to ensure metadata from Stripe (via Webhook) 
+    // is reflected in the user state as soon as possible.
+    supabase.auth.refreshSession();
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center animate-in fade-in duration-700">
       <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
@@ -237,7 +214,10 @@ function SuccessPage() {
         </svg>
       </div>
       <h1 className="text-4xl font-bold text-purple-900 mb-4">Subscription Confirmed!</h1>
-      <p className="text-lg text-gray-600 mb-8 max-w-md">Welcome! Your account is updated and your plan is active.</p>
+      <p className="text-lg text-gray-600 mb-8 max-w-md">
+        Welcome! Your account is updated and your plan is active. 
+        You can now view your status in the "My Account" section.
+      </p>
       <Link to="/" className="bg-purple-700 text-white px-8 py-3 rounded-full font-bold hover:bg-purple-800 transition shadow-lg">
         Return Home
       </Link>
