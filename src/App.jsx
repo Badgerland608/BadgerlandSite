@@ -31,7 +31,6 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // Helper to ensure database rows exist for new/returning users
   async function ensureUserRows(userId) {
     try {
       await supabase.rpc('ensure_profile', { uid: userId });
@@ -44,7 +43,6 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
-    // Centralized session handler to prevent "Zombie" states
     const handleSession = async (session) => {
       if (!session?.user) {
         if (mounted) {
@@ -57,11 +55,8 @@ export default function App() {
 
       const authUser = session.user;
       setUser(authUser);
-      
-      // Sync DB rows
       await ensureUserRows(authUser.id);
 
-      // Check Admin Status
       const { data: profile } = await supabase
         .from('profiles')
         .select('is_admin')
@@ -74,20 +69,15 @@ export default function App() {
       }
     };
 
-    // 1. Load initial session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleSession(session);
     });
 
-    // 2. Listen for Auth Changes (Login, Logout, Token Refresh)
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth Event:", event);
-      
       if (event === 'SIGNED_OUT') {
         if (mounted) {
           setUser(null);
           setIsAdmin(false);
-          // Redirect to home to clear any protected state
           window.location.href = "/"; 
         }
       } else if (session) {
@@ -95,7 +85,6 @@ export default function App() {
       }
     });
 
-    // 3. Visibility Check: Sync session when user returns from Stripe/External tabs
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -134,7 +123,12 @@ function AppContent({ user, isAdmin }) {
   const [showAccount, setShowAccount] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
 
-  // Close account sidebar on navigation
+  useEffect(() => {
+    if (location.hash === '#setup' && user) {
+      setShowAccount(true);
+    }
+  }, [location, user]);
+
   useEffect(() => {
     setShowAccount(false);
   }, [location.pathname]);
@@ -201,26 +195,37 @@ function HomeView() {
 
 function SuccessPage() {
   useEffect(() => {
-    // Explicitly refresh session to ensure metadata from Stripe (via Webhook) 
-    // is reflected in the user state as soon as possible.
     supabase.auth.refreshSession();
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 text-center animate-in fade-in duration-700">
-      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-        <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+    <div className="flex flex-col items-center justify-center min-h-[70vh] p-6 text-center animate-in fade-in zoom-in duration-500">
+      <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-8 shadow-inner">
+        <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
         </svg>
       </div>
-      <h1 className="text-4xl font-bold text-purple-900 mb-4">Subscription Confirmed!</h1>
-      <p className="text-lg text-gray-600 mb-8 max-w-md">
-        Welcome! Your account is updated and your plan is active. 
-        You can now view your status in the "My Account" section.
+      
+      <h1 className="text-4xl font-extrabold text-purple-900 mb-4">Subscription Confirmed!</h1>
+      <p className="text-xl text-gray-700 mb-2 font-medium">You're all set.</p>
+      <p className="text-gray-500 mb-10 max-w-md">
+        Your plan is active! To ensure we know when to arrive, please set your preferred weekly pickup schedule now.
       </p>
-      <Link to="/" className="bg-purple-700 text-white px-8 py-3 rounded-full font-bold hover:bg-purple-800 transition shadow-lg">
-        Return Home
-      </Link>
+
+      <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md justify-center">
+        <Link 
+          to="/#setup" 
+          className="bg-purple-700 text-white px-8 py-4 rounded-xl font-bold hover:bg-purple-800 transition shadow-lg flex-1 text-center"
+        >
+          Set Pickup Schedule
+        </Link>
+        <Link 
+          to="/" 
+          className="bg-gray-100 text-gray-700 px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition flex-1 text-center"
+        >
+          Go Home
+        </Link>
+      </div>
     </div>
   );
 }
