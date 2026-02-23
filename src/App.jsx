@@ -44,33 +44,73 @@ export default function App() {
     let mounted = true;
 
     const loadInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+      handleSession(session);
+    };
 
-        if (!session?.user) {
-          setUser(null);
-          setLoadingUser(false);
-          return;
-        }
+    const handleSession = async (session) => {
+      if (!session?.user) {
+        setUser(null);
+        setIsAdmin(false);
+        setLoadingUser(false);
+        return;
+      }
 
-        const authUser = session.user;
-        setUser(authUser);
-        await ensureUserRows(authUser.id);
+      const authUser = session.user;
+      setUser(authUser);
+      await ensureUserRows(authUser.id);
 
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', authUser.id)
-          .maybeSingle();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', authUser.id)
+        .maybeSingle();
 
-        if (mounted) setIsAdmin(profile?.is_admin === true);
-      } catch (err) {
-        console.error('Initial load error:', err);
-      } finally {
-        if (mounted) setLoadingUser(false);
+      if (mounted) {
+        setIsAdmin(profile?.is_admin === true);
+        setLoadingUser(false);
       }
     };
+
+    loadInitialSession();
+
+    // 🟢 AUTH LISTENER
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth Event:", event);
+      if (!mounted) return;
+
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsAdmin(false);
+        // Force clean redirect to home on logout
+        window.location.href = "/"; 
+        return;
+      }
+
+      // Handle sign in or token refresh (vital after redirects)
+      if (session) {
+        handleSession(session);
+      }
+    });
+
+    // 🟢 VISIBILITY CHECK: Re-sync when user returns from Stripe tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) handleSession(session);
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      mounted = false;
+      authListener?.subscription.unsubscribe();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
 
     loadInitialSession();
 
