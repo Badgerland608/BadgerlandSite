@@ -6,7 +6,7 @@ export default function AdminDashboard({ user, setShowAdmin }) {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeView, setActiveView] = useState("orders"); // 'orders', 'dispatch', or 'usage'
+  const [activeView, setActiveView] = useState("orders");
 
   const [stats, setStats] = useState({ totalOrders: 0, activeCustomers: 0, revenue: 0 });
   const [orders, setOrders] = useState([]);
@@ -30,13 +30,19 @@ export default function AdminDashboard({ user, setShowAdmin }) {
     try {
       setLoading(true);
       
-      // 1. Fetch Orders
-      const { data: allOrders } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      // 1. Fetch Orders (Including stripe_customer_id for billing)
+      const { data: allOrders } = await supabase
+        .from("orders")
+        .select("*, stripe_customer_id, user_id")
+        .order("created_at", { ascending: false });
       
       // 2. Fetch Active Customers Count
-      const { count: customerCount } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("active", true);
+      const { count: customerCount } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("active", true);
       
-      // 3. Fetch Subscriptions & Profiles for Dispatch and Usage
+      // 3. Fetch Subscriptions for Dispatch and Usage
       const { data: subs } = await supabase
         .from('subscriptions')
         .select(`
@@ -49,13 +55,10 @@ export default function AdminDashboard({ user, setShowAdmin }) {
         .eq('active', true);
 
       // --- PROCESS DATA ---
-
-      // Total Revenue
       const totalRev = allOrders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
       setStats({ totalOrders: allOrders?.length || 0, activeCustomers: customerCount || 0, revenue: totalRev });
       setOrders(allOrders || []);
 
-      // Group Dispatch by Day
       const groupedDispatch = subs?.filter(s => s.pickup_day).reduce((acc, curr) => {
         const day = curr.pickup_day;
         if (!acc[day]) acc[day] = [];
@@ -64,7 +67,6 @@ export default function AdminDashboard({ user, setShowAdmin }) {
       }, {}) || {};
       setDispatch(groupedDispatch);
 
-      // Calculate Monthly Usage Audit
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const usageMap = subs?.map(sub => {
         const userOrders = allOrders?.filter(o => 
@@ -104,24 +106,60 @@ export default function AdminDashboard({ user, setShowAdmin }) {
   };
 
   const saveWeight = async () => {
-    if (!weightInput || isNaN(weightInput)) return alert("Enter weight.");
+    if (!weightInput || isNaN(weightInput)) return alert("Enter valid weight.");
+    
+    setLoading(true);
     try {
-      const { error } = await supabase.from("orders").update({
-        pounds: Number(weightInput),
-        status: "completed",
-      }).eq("id", weightOrder.id);
+      // 1. Update DB: Set weight and status
+      const { error: dbError } = await supabase
+        .from("orders")
+        .update({
+          pounds: Number(weightInput),
+          status: "completed",
+        })
+        .eq("id", weightOrder.id);
 
-      if (error) throw error;
-      // Refresh all data to update usage audit
+      if (dbError) throw dbError;
+
+      // 2. Trigger Stripe Charge via Edge Function
+      // Using the Manual HTTP call since DB Webhooks are disabled
+      const response = await fetch(
+        `https://tuivdahifcmsybdyggnn.supabase.co/functions/v1/process-final-charge`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            record: {
+              id: weightOrder.id,
+              weight_lbs: weightInput,
+              stripe_customer_id: weightOrder.stripe_customer_id,
+              user_id: weightOrder.user_id
+            },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || "Weight saved, but Stripe charge failed.");
+      }
+
+      alert(`Success! ${weightInput} lbs logged and customer invoiced.`);
       await loadDashboardData();
       setShowWeightModal(false);
       setWeightInput("");
+
     } catch (err) {
-      alert("Error: " + err.message);
+      alert("Action Required: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div className="p-10 text-center animate-pulse text-purple-800 font-bold">Loading Badgerland Admin...</div>;
+  if (loading && !showWeightModal) return <div className="p-10 text-center animate-pulse text-purple-800 font-bold">Loading Badgerland Admin...</div>;
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
@@ -157,14 +195,24 @@ export default function AdminDashboard({ user, setShowAdmin }) {
             <tbody>
               {orders.map((o) => (
                 <tr key={o.id} className="border-b last:border-0 hover:bg-gray-50">
-                  <td className="p-4"><p className="font-bold">{o.customer_name || 'Guest'}</p><p className="text-[10px] text-gray-400">{o.customer_email}</p></td>
+                  <td className="p-4"><p className="font-bold">{o.full_name || 'Guest'}</p><p className="text-[10px] text-gray-400">{o.email}</p></td>
                   <td className="p-4"><span className="px-2 py-1 rounded-md bg-purple-100 text-[#804FB3] text-[10px] font-bold uppercase">{o.status}</span></td>
                   <td className="p-4 font-mono font-bold">{o.pounds || '--'}</td>
                   <td className="p-4 flex gap-2">
-                    <select className="text-[10px] border rounded p-1" value={o.status} onChange={(e) => updateOrderStatus(o.id, e.target.value)}>
+                    <select 
+                      className="text-[10px] border rounded p-1" 
+                      value={o.status} 
+                      disabled={updatingOrder === o.id}
+                      onChange={(e) => updateOrderStatus(o.id, e.target.value)}
+                    >
                       {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <button onClick={() => { setWeightOrder(o); setShowWeightModal(true); }} className="bg-black text-white px-3 py-1 rounded text-[10px] font-bold">LOG WEIGHT</button>
+                    <button 
+                      onClick={() => { setWeightOrder(o); setShowWeightModal(true); }} 
+                      className="bg-black text-white px-3 py-1 rounded text-[10px] font-bold hover:bg-gray-800"
+                    >
+                      LOG WEIGHT
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -228,10 +276,11 @@ export default function AdminDashboard({ user, setShowAdmin }) {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex justify-center items-center z-50 p-4">
           <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in duration-200">
             <h3 className="text-2xl font-black text-[#804FB3] mb-2 text-center">Ticket Weight</h3>
-            <p className="text-center text-gray-500 text-sm mb-6">Enter weight for <strong>{weightOrder?.customer_name}</strong></p>
+            <p className="text-center text-gray-500 text-sm mb-6">Enter weight for <strong>{weightOrder?.full_name}</strong></p>
             <div className="relative">
                <input
                 type="number"
+                step="0.1"
                 className="w-full text-center text-5xl font-black border-4 border-gray-100 p-6 rounded-2xl mb-6 focus:border-[#804FB3] outline-none transition-all"
                 placeholder="0.0"
                 autoFocus
@@ -242,7 +291,13 @@ export default function AdminDashboard({ user, setShowAdmin }) {
             </div>
             <div className="flex gap-3">
               <button className="flex-1 py-4 font-bold text-gray-400 hover:text-gray-600 transition" onClick={() => setShowWeightModal(false)}>CANCEL</button>
-              <button className="flex-1 py-4 bg-[#804FB3] text-white rounded-2xl font-bold shadow-lg hover:bg-purple-700 transition" onClick={saveWeight}>COMPLETE</button>
+              <button 
+                className="flex-1 py-4 bg-[#804FB3] text-white rounded-2xl font-bold shadow-lg hover:bg-purple-700 transition disabled:opacity-50" 
+                onClick={saveWeight}
+                disabled={loading}
+              >
+                {loading ? "CHARGING..." : "COMPLETE"}
+              </button>
             </div>
           </div>
         </div>
