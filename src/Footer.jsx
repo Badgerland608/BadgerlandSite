@@ -9,7 +9,7 @@ export default function Footer() {
         {/* Column 1: Brand */}
         <div className="space-y-4">
           <h3 className="text-2xl font-bold tracking-tight text-white">
-            Badgerland<span className="text-purple-300">Laundry</span>
+            Badgerland Laundry
           </h3>
           <p className="text-purple-200 text-sm leading-relaxed max-w-xs">
             Premium laundry pickup and delivery service. We handle the dirty work so you can reclaim your time.
@@ -32,10 +32,13 @@ export default function Footer() {
           <h4 className="text-lg font-semibold mb-4 text-purple-100">Contact</h4>
           <ul className="space-y-2 text-purple-200 text-sm">
             <li>Serving: Sun Prairie & Madison, WI</li>
-            <li>Email: hello@badgerlandlaundry.com</li>
+            <li>Email: info@badgerlandlaundry.com</li>
+            <li>Phone: 608-886-9148</li>
+            <li>Facebook: @BadgerlandLaundry</li>
+            <li>Google Business Page: <Link>https://share.google/phJV87F0gOsQ6Bp9F</Link> </li>
             <li className="pt-2">
               <span className="inline-block bg-purple-800 px-3 py-1 rounded-full text-xs font-mono">
-                Available Mon - Fri
+                Available Mon - Fri 7:00 AM - 9:00 PM
               </span>
             </li>
           </ul>
