@@ -34,13 +34,13 @@ export default function Footer() {
             <li>Serving: Sun Prairie & Madison, WI</li>
             <li>Email: info@badgerlandlaundry.com</li>
             <li>Phone: 608-886-9148</li>
-            <a 
-        href="https://facebook.com/your-page-handle" 
+           <li>Faceboook</li><a 
+        href="https://facebook.com/badgerlandlaundry" 
         target="_blank" 
         rel="noopener noreferrer" 
         className="flex items-center gap-2 hover:text-white transition"
       >
-        <span>Facebook</span>
+        <span>@BadgerlandLaundry</span>
       </a>
             <a 
         href="https://share.google/phJV87F0gOsQ6Bp9F" 
