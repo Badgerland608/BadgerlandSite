@@ -24,6 +24,7 @@ import Plans from "./Plans";
 import About from "./About";
 import Residential from "./Residential";
 import Commercial from "./Commercial";
+import Footer from "./Footer"; // <--- New Import
 import { supabase } from './lib/supabaseClient';
 
 export default function App() {
@@ -134,7 +135,7 @@ function AppContent({ user, isAdmin }) {
   }, [location.pathname]);
 
   return (
-    <div className="relative z-0">
+    <div className="relative z-0 min-h-screen flex flex-col">
       <Header
         setShowModal={setShowModal}
         user={user}
@@ -143,25 +144,27 @@ function AppContent({ user, isAdmin }) {
         setShowAdmin={setShowAdmin}
       />
 
-      {showAdmin && isAdmin ? (
-        <AdminDashboard user={user} setShowAdmin={setShowAdmin} />
-      ) : (
-        <>
-          <Routes>
-            <Route path="/" element={<HomeView />} />
-            <Route path="/plans" element={<Plans user={user} />} />
-            <Route path="/success" element={<SuccessPage />} />
-            <Route path="/cancel" element={<Plans user={user} />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/residential" element={<Residential />} />
-            <Route path="/commercial" element={<Commercial />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-          <footer className="bg-purple-900 text-white text-center py-3">
-            Badgerland Laundry LLC
-          </footer>
-        </>
-      )}
+      <main className="flex-grow">
+        {showAdmin && isAdmin ? (
+          <AdminDashboard user={user} setShowAdmin={setShowAdmin} />
+        ) : (
+          <>
+            <Routes>
+              <Route path="/" element={<HomeView />} />
+              <Route path="/plans" element={<Plans user={user} />} />
+              <Route path="/success" element={<SuccessPage />} />
+              <Route path="/cancel" element={<Plans user={user} />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/residential" element={<Residential />} />
+              <Route path="/commercial" element={<Commercial />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </>
+        )}
+      </main>
+
+      {/* Footer only shows if not currently viewing the Admin Dashboard */}
+      {!showAdmin && <Footer />}
 
       {showModal && <ScheduleModal setShowModal={setShowModal} user={user} />}
       {showAccount && user && <MyAccount user={user} setShowAccount={setShowAccount} />}
