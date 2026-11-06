@@ -1,55 +1,86 @@
+
 import React from 'react';
 import pickupImg from './assets/IMG_0917.jpg';
 
 function HowItWorks() {
   return (
-    <section className="bg-gray-100 py-12 text-center">
-      <h3 className="text-3xl font-bold text-purple-900 mb-10">
-        How It Works
-      </h3>
+    <section className="bg-gray-50 py-16 px-4 text-center">
+      <div className="max-w-5xl mx-auto">
 
-      <div className="flex flex-wrap justify-center gap-10 max-w-5xl mx-auto">
+        <p className="text-purple-700 font-bold uppercase tracking-widest text-sm mb-3">
+          Simple & Convenient
+        </p>
 
-        {/* Step 1 */}
-        <div className="flex-1 min-w-[240px] max-w-[300px]">
-          <h1 className="text-3xl text-purple-600 font-bold mb-2">Step 1</h1>
-          <div className="bg-white rounded-xl shadow-md p-8">
-            <div className="text-5xl text-purple-600 mb-4">📅</div>
-            <h4 className="text-xl font-semibold mb-3">Schedule Pickup</h4>
-            <p className="text-gray-700 text-base leading-relaxed">
-              Choose a pickup time that fits your schedule — mornings, evenings, or same‑day options.
+        <h2 className="text-3xl md:text-4xl font-bold text-purple-900 mb-4">
+          How Our Laundry Service Works
+        </h2>
+
+        <p className="text-gray-600 text-lg max-w-2xl mx-auto mb-12">
+          Whether you're running a business or managing laundry at home,
+          we make getting clean laundry simple.
+        </p>
+
+        <div className="grid md:grid-cols-3 gap-8">
+
+          {/* Step 1 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7">
+            <div className="text-4xl mb-4">🚚</div>
+
+            <p className="text-purple-600 font-bold text-sm uppercase mb-2">
+              Step 1
+            </p>
+
+            <h3 className="text-xl font-bold text-purple-900 mb-3">
+              We Pick Up
+            </h3>
+
+            <p className="text-gray-700 leading-relaxed">
+              Schedule a convenient pickup. We'll collect your laundry
+              directly from your home or business.
             </p>
           </div>
-        </div>
 
-        {/* Step 2 */}
-        <div className="flex-1 min-w-[240px] max-w-[300px]">
-          <h1 className="text-3xl text-purple-600 font-bold mb-2">Step 2</h1>
-          <div className="bg-white rounded-xl shadow-md p-4 flex flex-col items-center">
+          {/* Step 2 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <img
               src={pickupImg}
-              alt="Pickup"
-              className="h-[200px] w-[240px] object-cover rounded-md mb-4 shadow-md"
+              alt="Laundry being handled by Badgerland Laundry"
+              className="h-48 w-full object-cover rounded-xl mb-5"
             />
-            <h4 className="text-xl font-semibold mb-3">We Wash & Fold</h4>
-            <p className="text-gray-700 text-base leading-relaxed">
-              Your laundry is washed, dried, folded, and packaged neatly using premium detergents.
+
+            <p className="text-purple-600 font-bold text-sm uppercase mb-2">
+              Step 2
+            </p>
+
+            <h3 className="text-xl font-bold text-purple-900 mb-3">
+              We Clean & Fold
+            </h3>
+
+            <p className="text-gray-700 leading-relaxed">
+              Your laundry is washed, dried, folded, and packaged
+              neatly, ready to go back to you.
             </p>
           </div>
-        </div>
 
-        {/* Step 3 */}
-        <div className="flex-1 min-w-[240px] max-w-[300px]">
-          <h1 className="text-3xl text-purple-600 font-bold mb-2">Step 3</h1>
-          <div className="bg-white rounded-xl shadow-md p-8">
-            <div className="text-5xl text-purple-600 mb-4">🧺</div>
-            <h4 className="text-xl font-semibold mb-3">Delivery to Your Door</h4>
-            <p className="text-gray-700 text-base leading-relaxed">
-              We bring your clean laundry back the next day — fresh, folded, and ready to put away.
+          {/* Step 3 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-7">
+            <div className="text-4xl mb-4">🧺</div>
+
+            <p className="text-purple-600 font-bold text-sm uppercase mb-2">
+              Step 3
+            </p>
+
+            <h3 className="text-xl font-bold text-purple-900 mb-3">
+              We Deliver
+            </h3>
+
+            <p className="text-gray-700 leading-relaxed">
+              We return your clean, folded laundry directly to your
+              home or business.
             </p>
           </div>
-        </div>
 
+        </div>
       </div>
     </section>
   );

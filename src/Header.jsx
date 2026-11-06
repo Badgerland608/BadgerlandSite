@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from "react-router-dom";
-import { FaShoppingCart, FaUser, FaBars, FaTimes } from 'react-icons/fa';
+import { FaUser, FaBars, FaTimes } from 'react-icons/fa';
 import { supabase } from './lib/supabaseClient';
 
 function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
@@ -87,39 +87,45 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex gap-6 text-blue-900 font-medium">
-          <Link to="/" className="hover:text-blue-600">Home</Link>
-          <Link to="/About" className="hover:text-blue-600">About</Link>
+        <nav className="hidden md:flex items-center gap-6 text-purple-900 font-medium">
+  <Link to="/" className="hover:text-purple-600">Home</Link>
 
-          <div className="relative">
-            <button
-              onClick={() => {
-                setServicesOpen(!servicesOpen);
-                setUserMenuOpen(false);
-              }}
-              className="hover:text-blue-600"
-            >
-              Services
-            </button>
+  <Link to="/about" className="hover:text-purple-600">About</Link>
 
-            {servicesOpen && (
-              <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-40">
-                <Link to="/Residential" className="block px-4 py-2 hover:bg-blue-50">
-                  Residential
-                </Link>
-                <Link to="/Commercial" className="block px-4 py-2 hover:bg-blue-50">
-                  Commercial
-                </Link>
-              </div>
-            )}
-          </div>
-        </nav>
+  <div className="relative">
+    <button
+      onClick={() => {
+        setServicesOpen(!servicesOpen);
+        setUserMenuOpen(false);
+      }}
+      className="hover:text-purple-600"
+    >
+      Services
+    </button>
+
+    {servicesOpen && (
+      <div className="absolute top-full mt-2 bg-white shadow-lg rounded-md p-2 w-44 z-50">
+        <Link
+          to="/residential"
+          onClick={() => setServicesOpen(false)}
+          className="block px-4 py-2 hover:bg-purple-50"
+        >
+          Residential
+        </Link>
+      </div>
+    )}
+  </div>
+
+  <Link
+    to="/commercial"
+    className="text-purple-800 font-bold hover:text-purple-600"
+  >
+    Commercial
+  </Link>
+</nav>
 
         {/* Desktop Icons */}
         <div className="hidden md:flex items-center gap-6 relative">
-          <Link to="/cart" className="text-purple-900 hover:text-purple-600">
-            <FaShoppingCart size={20} />
-          </Link>
 
           <button
             onClick={() => {
