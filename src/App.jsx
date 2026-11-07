@@ -24,6 +24,8 @@ import Plans from "./Plans";
 import About from "./About";
 import Residential from "./Residential";
 import Commercial from "./Commercial";
+import PrivacyPolicy from "./PrivacyPolicy";
+import TermsOfService from "./TermsOfService";
 import Footer from "./Footer"; // <--- New Import
 import { supabase } from './lib/supabaseClient';
 
@@ -157,6 +159,8 @@ function AppContent({ user, isAdmin }) {
               <Route path="/about" element={<About />} />
               <Route path="/residential" element={<Residential />} />
               <Route path="/commercial" element={<Commercial />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </>

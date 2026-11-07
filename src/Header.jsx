@@ -208,11 +208,11 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[500] flex justify-end">
           <div
-            className="flex-1 bg-black bg-opacity-40"
+            className="flex-1 bg-gray-800 opacity-80"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <div className="w-64 bg-white h-full shadow-xl p-5 flex flex-col gap-4">
+          <div className="w-64 bg-white h-full shadow-xl p-5 flex flex-col items-start text-left gap-4">
             <div className="flex justify-end">
               <button onClick={() => setMobileMenuOpen(false)}>
                 <FaTimes size={24} />
@@ -225,13 +225,25 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             <button onClick={() => setServicesOpen(!servicesOpen)}>
               Services
             </button>
+{servicesOpen && (
+  <div className="ml-4 flex flex-col items-start gap-3 py-2">
+    <Link
+      to="/residential"
+      onClick={() => setMobileMenuOpen(false)}
+      className="block w-full text-left whitespace-nowrap"
+    >
+      Residential Laundry
+    </Link>
 
-            {servicesOpen && (
-              <div className="ml-4 space-y-2">
-                <Link to="/Residential" onClick={() => setMobileMenuOpen(false)}>Residential</Link>
-                <Link to="/Commercial" onClick={() => setMobileMenuOpen(false)}>Commercial</Link>
-              </div>
-            )}
+    <Link
+      to="/commercial"
+      onClick={() => setMobileMenuOpen(false)}
+      className="block w-full text-left whitespace-nowrap"
+    >
+      Commercial Laundry
+    </Link>
+  </div>
+)}  
 
             {!user ? (
               <>
@@ -260,14 +272,11 @@ function Header({ setShowModal, user, setShowAccount, isAdmin, setShowAdmin }) {
             <Link to="/plans" onClick={() => setMobileMenuOpen(false)}>Become a Member</Link>
 
             <button
-              onClick={() => {
-                handleScheduleClick();
-                setMobileMenuOpen(false);
-              }}
-              className="mt-4 bg-purple-700 text-white py-2 rounded-full"
-            >
-              Schedule Pickup
-            </button>
+  onClick={handleScheduleClick}
+  className="w-full text-center bg-purple-700 text-white px-4 py-3 rounded-lg font-semibold shadow hover:bg-purple-600"
+>
+  Schedule a Pickup
+</button>
           </div>
         </div>
       )}

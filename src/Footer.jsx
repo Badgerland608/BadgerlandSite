@@ -31,31 +31,50 @@ export default function Footer() {
         <div>
           <h4 className="text-lg font-semibold mb-4 text-purple-100">Contact</h4>
           <ul className="space-y-2 text-purple-200 text-sm">
-            <li>Serving: Sun Prairie & Madison, WI</li>
-            <li>Email: info@badgerlandlaundry.com</li>
-            <li>Phone: 608-886-9148</li>
-          <a 
-        href="https://facebook.com/badgerlandlaundry" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="flex items-center gap-2 hover:text-white transition"
-      >
-        <span>Facebook:@BadgerlandLaundry</span>
-      </a>
-            <a 
-        href="https://share.google/phJV87F0gOsQ6Bp9F" 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="flex items-center gap-2 hover:text-white transition"
-      >
-        <span>Google Reviews</span>
-      </a>
-            <li className="pt-2">
-              <span className="inline-block bg-purple-800 px-3 py-1 rounded-full text-xs font-mono">
-                Available Mon - Fri 7:00 AM - 9:00 PM
-              </span>
-            </li>
-          </ul>
+  <li>Serving: Sun Prairie & Madison, WI</li>
+
+  <li>
+    Email:{" "}
+    <a href="mailto:info@badgerlandlaundry.com" className="hover:text-white">
+      info@badgerlandlaundry.com
+    </a>
+  </li>
+
+  <li>
+    Phone:{" "}
+    <a href="tel:6088869148" className="hover:text-white">
+      608-886-9148
+    </a>
+  </li>
+
+  <li>
+    <a
+      href="https://facebook.com/badgerlandlaundry"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-white transition"
+    >
+      Facebook: @BadgerlandLaundry
+    </a>
+  </li>
+
+  <li>
+    <a
+      href="https://share.google/phJV87F0gOsQ6Bp9F"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="hover:text-white transition"
+    >
+      Google Reviews
+    </a>
+  </li>
+
+  <li className="pt-2">
+    <span className="inline-block bg-purple-800 px-3 py-1 rounded-full text-xs font-mono">
+      Available Mon - Fri 7:00 AM - 9:00 PM
+    </span>
+  </li>
+</ul>
         </div>
       </div>
 
@@ -63,8 +82,9 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-6 mt-12 pt-6 border-t border-purple-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-purple-300">
         <p>© {new Date().getFullYear()} Badgerland Laundry LLC. All rights reserved.</p>
         <div className="flex gap-6">
-          <a href="#" className="hover:text-white transition">Privacy Policy</a>
-          <a href="#" className="hover:text-white transition">Terms of Service</a>
+          
+          <a href="/privacy-policy" className="hover:text-white transition">Privacy Policy</a>
+          <a href="/terms-of-service" className="hover:text-white transition">Terms of Service</a>
         </div>
       </div>
     </footer>
